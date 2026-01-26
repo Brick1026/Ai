@@ -37,6 +37,7 @@ public class lab1 {
             try (Scanner scanny = new Scanner(pathFile)) {
                 while(scanny.hasNextLine()) {
                     String line = scanny.nextLine();
+                    line = line.trim();
                     String[] words = line.split("\\s+");
                     int[] numbers =  new int[2];
                     for(int i = 0; i < words.length; i++) {
@@ -56,10 +57,14 @@ public class lab1 {
         Map searchMap = new Map(myImage, elevationFile);
         search(searchMap, cords);
 
-        BufferedImage outputImage = searchMap.convertToImageFile(); //get output image from map (post search)
+        for(int i = 0; i < 10; i++) {
+            searchMap.setPixelToPathAtXY(0,i);
+        }
 
+        BufferedImage outputImage = searchMap.convertToImageFile(); //get output image from map (post search)
+        
         try {
-            ImageIO.write(outputImage, "jpg", new File(args[3])); //write map to file
+            ImageIO.write(outputImage, "png", new File(args[3])); //write map to file
         } catch (IOException ex) {
             System.err.println("File write failure");
             System.exit(-1);
@@ -100,6 +105,7 @@ class Map  {
                 int j = 0;
                 while(scanny.hasNextLine()) {
                     String line = scanny.nextLine();
+                    line = line.trim();
                     String[] words = line.split("\\s+");
                     for(int i = 0; i < width - 5; i++) {
                         elevationArray[i][j] = Double.parseDouble(words[i]);
@@ -147,6 +153,7 @@ class Map  {
     public void setPixelToPathAtXY(int pixelX, int pixelY) {
         grid[pixelX][pixelY].setAsPath();
     }
+
     /**
      * Get the pixel terrain at (X, Y). Uses getTerrain from Pixel.
      * @param pixelX int x cord
@@ -154,6 +161,15 @@ class Map  {
      */
     public int getPixelTerrainAtXY(int pixelX, int pixelY) {
         return grid[pixelX][pixelY].getTerrain();
+    }
+
+    /**
+     * Get the pixel elevation at (X, Y). Uses getElevation from Pixel.
+     * @param pixelX int x cord
+     * @param pixelY int y cord
+     */
+    public double getElevationAtXY(int pixelX, int pixelY) {
+        return grid[pixelX][pixelY].getElevation();
     }
 
     /**
