@@ -57,12 +57,8 @@ public class lab1 {
         Map searchMap = new Map(myImage, elevationFile);
         search(searchMap, cords);
 
-        for(int i = 0; i < 10; i++) {
-            searchMap.setPixelToPathAtXY(0,i);
-        }
+        BufferedImage outputImage = searchMap.convertToImage(); //get output image from map (post search)
 
-        BufferedImage outputImage = searchMap.convertToImageFile(); //get output image from map (post search)
-        
         try {
             ImageIO.write(outputImage, "png", new File(args[3])); //write map to file
         } catch (IOException ex) {
@@ -133,7 +129,7 @@ class Map  {
      * Converts the current grid back to an image 
      * @return a BufferedImage of the board
      */
-    public BufferedImage convertToImageFile() {
+    public BufferedImage convertToImage() {
         BufferedImage canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         for(int i = 0; i < width; i++) {
             for(int j = 0; j < height; j++) {
