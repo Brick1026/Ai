@@ -75,6 +75,16 @@ public class lab1 {
      * @param pointsToVisit ArrayList of 2d coordiantes
      */
     private static void search(Map searchMap, ArrayList<int[]> pointsToVisit) {
+         /*
+         For Each point in pointsToVisit {
+            curx and cury = start x and y
+            While curX and curY do not equal destX and destY {
+                 curX and curY = getNextMove()
+            }
+         }
+        */
+        
+    
         //TODO: Build search algorithm
     }
 
@@ -141,7 +151,6 @@ class Map  {
         return canvas; 
     }
 
-    // Functions utilizing internal Pixel functions. //
 
     /**
      * Sets the pixel at (X, Y) in grid to a path internally. Uses setAsPath from Pixel.
@@ -150,6 +159,15 @@ class Map  {
      */
     public void setPixelToPathAtXY(int pixelX, int pixelY) {
         grid[pixelX][pixelY].setAsPath();
+    }
+
+    /**
+     * Sets starting point for algo. (sets this Pixel's shortest path to 0) 
+     * @param startX int x cord
+     * @param startY int y cord
+     */
+    public void setStart(int startX,int startY) {
+        grid[startX][startY].setShortestPathToMe(0);
     }
 
     /**
@@ -211,7 +229,39 @@ class Map  {
             frontier.add(new Pixel(westPixel));
         }
     }
+
+
+
+
+    /**
+     * Given an input curX and curY uses the board and priority queue to select next move.
+     * Once a move is chosen this new move's prevPixel is set to current board position.
+     * @param curX current x position
+     * @param curY current y position
+     * @return int[2] x and y dimension
+     */
+    public int[] getNextMove(int curX, int curY) {
+        //pop until one of the results is in agreement with shortest path for that grid space on board (must be valid non-duplicate)
+        Pixel nextPotential = frontier.remove();
+        while(isGarbage(nextPotential)) {
+            nextPotential = frontier.remove();
+        }
+        int destX = nextPotential.getPixelX();
+        int destY = nextPotential.getPixelY();
+        grid[destX][destY].setPrev(grid[curX][curY]);
+        return new int[]{destX,destY};
+    }
     
+    /**
+     * Helper function for getNextMove. Compares copy in priorityQueue to current board state to verify if it is garbage.
+     * @param nextPotential pixel to check if garbage copy
+     * @return boolean 
+     */
+    public boolean isGarbage(Pixel nextPotential) {
+        return nextPotential.getShortestPathToMe() != grid[nextPotential.getPixelX()][nextPotential.getPixelY()].getShortestPathToMe();
+    }
+
+
     /**
      * This only resets shortestPath and frontier. To be triggered for each subsequent point reached.
      */
@@ -225,7 +275,7 @@ class Map  {
     }
     
 //
-//
+// 
 //
 //
 //
@@ -254,6 +304,7 @@ class Map  {
         private int pixelRGB; //color of pixel
         private int terrain; //derived from pixelRGB
         private double shortestPathToMe;
+        private Pixel prevPixel;
 
         
         /**
@@ -267,6 +318,7 @@ class Map  {
             this.pixelX = pixelX;
             this.pixelY = pixelY;
             this.shortestPathToMe = Double.MAX_VALUE;
+            this.prevPixel = null;
             this.terrain = computeTerrain(pixelRGB);
         }  
 
@@ -276,6 +328,7 @@ class Map  {
             this.pixelY = other.getPixelY();
             this.pixelRGB = other.getRGB();
             this.terrain = other.getTerrain();
+            this.prevPixel = new Pixel(other.getPrevPixel());
             this.shortestPathToMe = other.getShortestPathToMe();
         }
 
@@ -287,8 +340,12 @@ class Map  {
             this.terrain = computeTerrain(pixelRGB);
         }
 
-        public void setShortestPathToMe(double shortestPathToMe) {
+        protected void setShortestPathToMe(double shortestPathToMe) {
             this.shortestPathToMe = shortestPathToMe;
+        }
+
+        protected void setPrev(Pixel previous) {
+            this.prevPixel = previous;
         }
 
 
@@ -390,7 +447,7 @@ class Map  {
          * gets pixel's y cord
          * @return int pixelY
          */
-        public int getPixelY() {
+        protected int getPixelY() {
             return pixelY;
         }
 
@@ -398,12 +455,16 @@ class Map  {
          * gets pixel's x cord
          * @return int pixelX
          */
-        public int getPixelX() {
+        protected int getPixelX() {
             return pixelX;
         }
 
-        public double getShortestPathToMe() {
+        protected double getShortestPathToMe() {
             return shortestPathToMe;
+        }
+
+        protected Pixel getPrevPixel() {
+            return prevPixel;
         }
         
     }
