@@ -153,24 +153,6 @@ class Map  {
     }
 
     /**
-     * Add the pixel at (X, Y) to the priority queue.
-     * @param pixelX int x cord
-     * @param pixelY int y cord
-     */
-    public void addPixelToPriorityQueueAtXY(int pixelX, int pixelY) {
-        frontier.add(grid[pixelX][pixelY]);
-    }
-
-    /**
-     * Remove head of priority queue and return its x and y cords.
-     * @return int[] of length 2 with x and y cords.
-     */
-    public int[] removePixelFromPriorityQueue() {
-        Pixel p = frontier.remove();
-        return new int[]{p.getPixelX(),p.getPixelY()};
-    }
-
-    /**
      * Get the pixel terrain at (X, Y). Uses getTerrain from Pixel.
      * @param pixelX int x cord
      * @param pixelY int y cord
@@ -188,68 +170,60 @@ class Map  {
         return grid[pixelX][pixelY].getElevation();
     }
 
-    /**
-     * Computes h(n) for (x,y). Uses computeHueristicWeight from Pixel.
-     * @param pixelX
-     * @param pixelY
-     * @return
-     */
-    public int computeHueristicWeightAtXY(int pixelX, int pixelY) {
-        return grid[pixelX][pixelY].computeHueristicWeight();
-    }
-
     // Search functions //
 
-    /**
-     * Computes hueristic distance to goal in 3D h(n) (ignores terrain)
-     * @param curX int 
-     * @param curY int
-     * @param destX int
-     * @param destY int
-     * @return distance to goal node (destX, destY)
-     */
-    public double computeDistanceToGoalNode(int curX, int curY, int destX, int destY) {
-        //convert to meters
-        curX*= 10.29;
-        curY*= 7.55;
-        destX*= 10.29;
-        destY*= 7.55;
+    public void updateFrontierFromXY(int curX, int curY) {
+        Pixel currentPixel = grid[curX][curY];
+        Pixel northPixel = grid[curX][curY + 1];
+        Pixel southPixel = grid[curX][curY - 1];
+        Pixel eastPixel = grid[curX-1][curY];
+        Pixel westPixel = grid[curX+1][curY];
 
-        //compute distance
-        double xDiff = curX - destX;
-        double yDiff = curY - destY;
-        double zDiff = grid[curX][curY].getElevation() - grid[destX][destY].getElevation();
-        return Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+        double compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
+        if(northPixel.getShortestPathToMe() > compare) {
+            //add shortest distance g(n) into node not accounting for hueristic
+            northPixel.setShortestPathToMe(compare);
+            //add Pixel deeep copy to frontier (disconnect from original object)
+            frontier.add(new Pixel(northPixel));
+        }
+
+        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
+        if(southPixel.getShortestPathToMe() > compare) {
+            //add shortest distance g(n) into node not accounting for hueristic
+            southPixel.setShortestPathToMe(compare);
+            //add Pixel deeep copy to frontier (disconnect from original object)
+            frontier.add(new Pixel(southPixel));
+        }
+
+        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
+        if(eastPixel.getShortestPathToMe() > compare) {
+            //add shortest distance g(n) into node not accounting for hueristic
+            eastPixel.setShortestPathToMe(compare);
+            //add Pixel deeep copy to frontier (disconnect from original object)
+            frontier.add(new Pixel(eastPixel));
+        }
+
+        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
+        if(westPixel.getShortestPathToMe() > compare) {
+            //add shortest distance g(n) into node not accounting for hueristic
+            westPixel.setShortestPathToMe(compare);
+            //add Pixel deeep copy to frontier (disconnect from original object)
+            frontier.add(new Pixel(westPixel));
+        }
     }
-
     
     /**
-     * Computes distance to frontier node in 3D g(n) (accounts for terrain)
-     * @param curX int 
-     * @param curY int 
-     * @param destX int
-     * @param destY int
-     * @return
+     * This only resets shortestPath and frontier. To be triggered for each subsequent point reached.
      */
-    public double computeDistanceToFrontierNode(int curX, int curY,  int destX, int destY) {
-        //convert to meters
-        curX*= 10.29;
-        curY*= 7.55;
-        destX*= 10.29;
-        destY*= 7.55;
-
-        //compute weighted distance
-        double xDiff = curX - destX;
-        double yDiff = curY - destY;
-        double zDiff = grid[curX][curY].getElevation() - grid[destX][destY].getElevation();
-        double distanceToGetHere = grid[curX][curY].getShortestPathToMe();
-        double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
-        
-        return distanceToGetHere + distanceToNewNode + grid[destX][destY].resolveTerrainWeight();
+    public void resetBoard() {
+        frontier.clear();
+        for(Pixel[] w : grid) {
+            for(Pixel p : w) {
+              p.setShortestPathToMe(Double.MAX_VALUE);
+            }
+        }
     }
-
     
-
 //
 //
 //
@@ -279,7 +253,7 @@ class Map  {
         private final int pixelY;
         private int pixelRGB; //color of pixel
         private int terrain; //derived from pixelRGB
-        private int shortestPathToMe;
+        private double shortestPathToMe;
 
         
         /**
@@ -292,9 +266,18 @@ class Map  {
             this.pixelRGB = pixelRGB;
             this.pixelX = pixelX;
             this.pixelY = pixelY;
-            this.shortestPathToMe = Integer.MAX_VALUE;
+            this.shortestPathToMe = Double.MAX_VALUE;
             this.terrain = computeTerrain(pixelRGB);
         }  
+
+        protected Pixel(Pixel other) {
+            this.elevation = other.getElevation();
+            this.pixelX = other.getPixelX();
+            this.pixelY = other.getPixelY();
+            this.pixelRGB = other.getRGB();
+            this.terrain = other.getTerrain();
+            this.shortestPathToMe = other.getShortestPathToMe();
+        }
 
         /**
          * Sets terrain and pixelRGB to a path.
@@ -304,10 +287,25 @@ class Map  {
             this.terrain = computeTerrain(pixelRGB);
         }
 
+        public void setShortestPathToMe(double shortestPathToMe) {
+            this.shortestPathToMe = shortestPathToMe;
+        }
+
+
         protected int resolveTerrainWeight() {
             //TODO implement weights
             return 0;
         }
+
+        //TODO IMPLEMENT COMPARETO WHICH OPERATES AS THE HUERISTIC. 
+        //ONCE A NEW CHECKPOINT IS HIT CLEAR THE PRIORITY QUEUE RESETS
+        //compareTO ranks pixels based on their shortestPathToMe (current pixel) + distanceToGoal
+
+        /* 
+        since I'm updating the actual object each time a shorter path to a node is found
+        If something popped from the priority queue has a different shortestPathToMe
+        then the board then we can discard and pop again. It is a duplicate.
+        */
 
         /**
          * Uses terrain key to compute terrain integer
@@ -339,13 +337,30 @@ class Map  {
                 return 8; //impassable
             }
         }
-        
-        //NOTE: Functions below are used by map and are uneccessary at next level of abstraction
 
+         /**
+         * Computes distance to node in 3D (accounts for terrain, used for g(n))
+         * @param cur Pixel 
+         * @param dest Pixel
+         * @return distance to node + terrain weight
+         */
+        protected double computeDistanceToNode(Pixel dest) {
 
-        protected int computeHueristicWeight() {
-            return 0; //TODO: Setup hueristic computation
+            //convert to meters
+            double curDblX = 10.29*this.pixelX;
+            double curDblY = 7.55*this.pixelY;
+            double destDblX = 10.29*dest.getPixelX();
+            double destDblY = 7.55*dest.getPixelY();
+
+            //compute distance
+            double xDiff = curDblX - destDblX;
+            double yDiff = curDblY - destDblY;
+            double zDiff = this.elevation - dest.getElevation();
+            double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+            
+            return distanceToNewNode + dest.resolveTerrainWeight();
         }
+        
 
         /**
          * gets elevation
@@ -387,7 +402,7 @@ class Map  {
             return pixelX;
         }
 
-        public int getShortestPathToMe() {
+        public double getShortestPathToMe() {
             return shortestPathToMe;
         }
         
