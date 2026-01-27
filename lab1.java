@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 
@@ -84,6 +85,7 @@ class Map  {
     private int width;
     private int height;
     private Pixel[][] grid;
+    private PriorityQueue<Pixel> frontier = new PriorityQueue<>();
 
     /**
      * Constructs a new Map object.
@@ -120,7 +122,7 @@ class Map  {
         //Construct grid of pixels
         for(int i = 0; i < width; i++) {
             for(int j = 0; j < height; j++) {
-                grid[i][j] = new Pixel(elevationArray[i][j],myImage.getRGB(i,j));
+                grid[i][j] = new Pixel(elevationArray[i][j],myImage.getRGB(i,j),i,j);
             }
         }
 
@@ -148,6 +150,24 @@ class Map  {
      */
     public void setPixelToPathAtXY(int pixelX, int pixelY) {
         grid[pixelX][pixelY].setAsPath();
+    }
+
+    /**
+     * Add the pixel at (X, Y) to the priority queue.
+     * @param pixelX int x cord
+     * @param pixelY int y cord
+     */
+    public void addPixelToPriorityQueueAtXY(int pixelX, int pixelY) {
+        frontier.add(grid[pixelX][pixelY]);
+    }
+
+    /**
+     * Remove head of priority queue and return its x and y cords.
+     * @return int[] of length 2 with x and y cords.
+     */
+    public int[] removePixelFromPriorityQueue() {
+        Pixel p = frontier.remove();
+        return new int[]{p.getPixelX(),p.getPixelY()};
     }
 
     /**
@@ -181,33 +201,54 @@ class Map  {
     // Search functions //
 
     /**
-     * Computes hueristic distance to goal in 3D h(n)
+     * Computes hueristic distance to goal in 3D h(n) (ignores terrain)
      * @param curX int 
      * @param curY int
-     * @param curZ double
      * @param destX int
      * @param destY int
-     * @param destZ double
-     * @return
+     * @return distance to goal node (destX, destY)
      */
-    private static double computeDistanceToGoalNode(int curX, int curY, double curZ, int destX, int destY, double destZ) {
-        return 0; //TODO: implement compution for distance to frontier node
+    public double computeDistanceToGoalNode(int curX, int curY, int destX, int destY) {
+        //convert to meters
+        curX*= 10.29;
+        curY*= 7.55;
+        destX*= 10.29;
+        destY*= 7.55;
+
+        //compute distance
+        double xDiff = curX - destX;
+        double yDiff = curY - destY;
+        double zDiff = grid[curX][curY].getElevation() - grid[destX][destY].getElevation();
+        return Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
     }
 
     
     /**
-     * Computes distance to frontier node in 3D g(n)
+     * Computes distance to frontier node in 3D g(n) (accounts for terrain)
      * @param curX int 
      * @param curY int 
-     * @param curZ double
      * @param destX int
      * @param destY int
-     * @param destZ double
      * @return
      */
-    private static double computeDistanceToFrontierNode(int curX, int curY, double curZ, int destX, int destY, double destZ) {
-        return 0; //TODO: implement compution for distance to frontier node
+    public double computeDistanceToFrontierNode(int curX, int curY,  int destX, int destY) {
+        //convert to meters
+        curX*= 10.29;
+        curY*= 7.55;
+        destX*= 10.29;
+        destY*= 7.55;
+
+        //compute weighted distance
+        double xDiff = curX - destX;
+        double yDiff = curY - destY;
+        double zDiff = grid[curX][curY].getElevation() - grid[destX][destY].getElevation();
+        double distanceToGetHere = grid[curX][curY].getShortestPathToMe();
+        double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+        
+        return distanceToGetHere + distanceToNewNode + grid[destX][destY].resolveTerrainWeight();
     }
+
+    
 
 //
 //
@@ -233,9 +274,12 @@ class Map  {
         8 - OOB or Impassable Vegetation
         9 - Search Path
         */
-        private int terrain; //derived from pixelRGB
         private final double elevation; //height of pixel
+        private final int pixelX;
+        private final int pixelY;
         private int pixelRGB; //color of pixel
+        private int terrain; //derived from pixelRGB
+        private int shortestPathToMe;
 
         
         /**
@@ -243,9 +287,12 @@ class Map  {
          * @param elevation double elevation
          * @param pixelRGB RGB from getRGB on image fil
          */
-        protected Pixel(double elevation, int pixelRGB) {
+        protected Pixel(double elevation, int pixelRGB, int pixelX, int pixelY) {
             this.elevation = elevation;
             this.pixelRGB = pixelRGB;
+            this.pixelX = pixelX;
+            this.pixelY = pixelY;
+            this.shortestPathToMe = Integer.MAX_VALUE;
             this.terrain = computeTerrain(pixelRGB);
         }  
 
@@ -255,6 +302,11 @@ class Map  {
         protected void setAsPath() {
             this.pixelRGB = new Color(177, 86, 237).getRGB();
             this.terrain = computeTerrain(pixelRGB);
+        }
+
+        protected int resolveTerrainWeight() {
+            //TODO implement weights
+            return 0;
         }
 
         /**
@@ -317,6 +369,26 @@ class Map  {
          */
         protected int getRGB() {
             return pixelRGB;
+        }
+
+        /**
+         * gets pixel's y cord
+         * @return int pixelY
+         */
+        public int getPixelY() {
+            return pixelY;
+        }
+
+        /**
+         * gets pixel's x cord
+         * @return int pixelX
+         */
+        public int getPixelX() {
+            return pixelX;
+        }
+
+        public int getShortestPathToMe() {
+            return shortestPathToMe;
         }
         
     }
