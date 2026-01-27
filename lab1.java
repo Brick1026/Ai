@@ -77,13 +77,21 @@ public class lab1 {
     private static void search(Map searchMap, ArrayList<int[]> pointsToVisit) {
          /*
          For Each point in pointsToVisit {
+            
             curx and cury = start x and y
             While curX and curY do not equal destX and destY {
-                 curX and curY = getNextMove()
+                updateFrontierFromXY(curX,curY)
+                curX and curY = getNextMove()
             }
+
+            backTrack(curX, curY, startX, startY)
+            
          }
+
+    
         */
         
+
     
         //TODO: Build search algorithm
     }
@@ -230,9 +238,6 @@ class Map  {
         }
     }
 
-
-
-
     /**
      * Given an input curX and curY uses the board and priority queue to select next move.
      * Once a move is chosen this new move's prevPixel is set to current board position.
@@ -261,15 +266,30 @@ class Map  {
         return nextPotential.getShortestPathToMe() != grid[nextPotential.getPixelX()][nextPotential.getPixelY()].getShortestPathToMe();
     }
 
+    /**
+     * Works backwards from currentX and currentY coloring pixels and keeping track of distance travelled.
+     * @param curX current point X
+     * @param curY current point Y
+     * @param destX (start x)
+     * @param destY (start y)
+     * @return distance traveled 
+     */
+    public int backTrack(int curX, int curY, int destX, int destY) {
+        //TODO: Implement backtrack algo to traverse backwards through pixels coloring them and counting distance.
+        return 0;
+    }
+
 
     /**
-     * This only resets shortestPath and frontier. To be triggered for each subsequent point reached.
+     * This only resets shortestPath, prevPixel, and frontier.
+     * To be triggered for each subsequent point reached.
      */
     public void resetBoard() {
         frontier.clear();
         for(Pixel[] w : grid) {
             for(Pixel p : w) {
               p.setShortestPathToMe(Double.MAX_VALUE);
+              p.prevPixel = null;
             }
         }
     }
