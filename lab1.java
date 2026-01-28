@@ -56,7 +56,8 @@ public class lab1 {
         }
 
         Map searchMap = new Map(myImage, elevationFile);
-        search(searchMap, cords);
+        double distanceTravelled = search(searchMap, cords);
+        System.out.println(distanceTravelled);
 
         BufferedImage outputImage = searchMap.convertToImage(); //get output image from map (post search)
 
@@ -74,25 +75,20 @@ public class lab1 {
      * @param searchMap Map to traverse
      * @param pointsToVisit ArrayList of 2d coordiantes
      */
-    private static void search(Map searchMap, ArrayList<int[]> pointsToVisit) {
+    private static double search(Map searchMap, ArrayList<int[]> pointsToVisit) {
          /*
+         double distanceTraveled = 0;
          For Each point in pointsToVisit {
-            
             curx and cury = start x and y
             While curX and curY do not equal destX and destY {
                 updateFrontierFromXY(curX,curY)
                 curX and curY = getNextMove()
-            }
-
-            backTrack(curX, curY, startX, startY)
-            
+            }   
+            distanceTravelled += backTrack(curX, curY, startX, startY)
          }
-
-    
+        return distanceTraveled.
         */
-        
-
-    
+        return 0;
         //TODO: Build search algorithm
     }
 
@@ -200,42 +196,60 @@ class Map  {
 
     public void updateFrontierFromXY(int curX, int curY) {
         Pixel currentPixel = grid[curX][curY];
-        Pixel northPixel = grid[curX][curY + 1];
-        Pixel southPixel = grid[curX][curY - 1];
-        Pixel eastPixel = grid[curX-1][curY];
-        Pixel westPixel = grid[curX+1][curY];
+        double compare;
 
-        double compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
-        if(northPixel.getShortestPathToMe() > compare) {
-            //add shortest distance g(n) into node not accounting for hueristic
-            northPixel.setShortestPathToMe(compare);
-            //add Pixel deeep copy to frontier (disconnect from original object)
-            frontier.add(new Pixel(northPixel));
+        try {
+            Pixel northPixel = grid[curX][curY + 1]; //will trip try catch if off grid
+            compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
+            if(northPixel.getShortestPathToMe() > compare) {
+                //add shortest distance g(n) into node not accounting for hueristic
+                northPixel.setShortestPathToMe(compare);
+                //add Pixel deeep copy to frontier (disconnect from original object)
+                frontier.add(new Pixel(northPixel));
+            }
+        } catch (IndexOutOfBoundsException e) {
+            //If we step out of bounds of the image nothing to do
         }
 
-        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
-        if(southPixel.getShortestPathToMe() > compare) {
-            //add shortest distance g(n) into node not accounting for hueristic
-            southPixel.setShortestPathToMe(compare);
-            //add Pixel deeep copy to frontier (disconnect from original object)
-            frontier.add(new Pixel(southPixel));
+        try {
+            Pixel southPixel = grid[curX][curY - 1];
+            compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
+            if(southPixel.getShortestPathToMe() > compare) {
+                //add shortest distance g(n) into node not accounting for hueristic
+                southPixel.setShortestPathToMe(compare);
+                //add Pixel deeep copy to frontier (disconnect from original object)
+                frontier.add(new Pixel(southPixel));
+            }
+        } catch (IndexOutOfBoundsException  e) {
+             //If we step out of bounds of the image nothing to do
+        }
+     
+        try {
+            Pixel eastPixel = grid[curX-1][curY];
+            compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
+            if(eastPixel.getShortestPathToMe() > compare) {
+                //add shortest distance g(n) into node not accounting for hueristic
+                eastPixel.setShortestPathToMe(compare);
+                //add Pixel deeep copy to frontier (disconnect from original object)
+                frontier.add(new Pixel(eastPixel));
+            }
+        } catch (IndexOutOfBoundsException e) {
+            //If we step out of bounds of the image nothing to do
         }
 
-        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
-        if(eastPixel.getShortestPathToMe() > compare) {
-            //add shortest distance g(n) into node not accounting for hueristic
-            eastPixel.setShortestPathToMe(compare);
-            //add Pixel deeep copy to frontier (disconnect from original object)
-            frontier.add(new Pixel(eastPixel));
+        try {
+            Pixel westPixel = grid[curX+1][curY];
+            compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
+            if(westPixel.getShortestPathToMe() > compare) {
+                //add shortest distance g(n) into node not accounting for hueristic
+                westPixel.setShortestPathToMe(compare);
+                //add Pixel deeep copy to frontier (disconnect from original object)
+                frontier.add(new Pixel(westPixel));
+            }    
+        } catch (IndexOutOfBoundsException e) {
+            //If we step out of bounds of the image nothing to do
         }
-
-        compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
-        if(westPixel.getShortestPathToMe() > compare) {
-            //add shortest distance g(n) into node not accounting for hueristic
-            westPixel.setShortestPathToMe(compare);
-            //add Pixel deeep copy to frontier (disconnect from original object)
-            frontier.add(new Pixel(westPixel));
-        }
+    
     }
 
     /**
