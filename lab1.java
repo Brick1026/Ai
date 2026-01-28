@@ -76,20 +76,26 @@ public class lab1 {
      * @param pointsToVisit ArrayList of 2d coordiantes
      */
     private static double search(Map searchMap, ArrayList<int[]> pointsToVisit) {
-         /*
-         double distanceTraveled = 0;
-         For Each point in pointsToVisit {
-            curx and cury = start x and y
-            While curX and curY do not equal destX and destY {
-                updateFrontierFromXY(curX,curY)
-                curX and curY = getNextMove()
-            }   
-            distanceTravelled += backTrack(curX, curY, startX, startY)
-         }
-        return distanceTraveled.
-        */
-        return 0;
-        //TODO: Build search algorithm
+        double distanceTravelled = 0;
+        int[] start = pointsToVisit.remove(0);
+        int curX = start[0];
+        int curY = start[1];
+        for(int[] p : pointsToVisit) {
+            searchMap.resetBoard();
+            int destX = p[0];
+            int destY = p[1];
+            int startX = curX;
+            int startY = curY;
+            while(curX != destX && curY != destY) {
+                searchMap.updateFrontierFromXY(curX,curY);
+                int[] nextPoint = searchMap.getNextMove(curX,curY);
+                curX = nextPoint[0];
+                curY = nextPoint[1];
+            }
+            distanceTravelled += searchMap.backTrack(curX,curY,startX,startY);
+        }
+
+        return distanceTravelled;
     }
 
 }
