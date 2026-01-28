@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
@@ -94,18 +95,17 @@ public class lab1 {
             }
             distanceTravelled += searchMap.backTrack(curX,curY,startX,startY);
         }
-
         return distanceTravelled;
     }
 
 }
 
 
-class Map  {
+class Map {
     private int width;
     private int height;
     private Pixel[][] grid;
-    private PriorityQueue<Pixel> frontier = new PriorityQueue<>();
+    private PriorityQueue<Pixel> frontier = new PriorityQueue<>(Comparator.reverseOrder());
 
     /**
      * Constructs a new Map object.
@@ -209,6 +209,13 @@ class Map  {
 
     // Search functions //
 
+    /**
+     * Adds pixels for all possible moves and updates grid if shorter paths are made avaliable to any of the nodes.
+     * A copy of the pixel object from the grid is added to the frontier. If this is out of sync with board state when 
+     * dequeued it allows us to conclude that it is a garbage copy.
+     * @param curX x position to explore frontier from
+     * @param curY y position to explore frontier from.
+     */
     public void updateFrontierFromXY(int curX, int curY) {
         Pixel currentPixel = grid[curX][curY];
         double compare;
@@ -330,6 +337,7 @@ class Map  {
             }
         }
     }
+
     
 //
 // 
@@ -383,6 +391,10 @@ class Map  {
             this.terrain = computeTerrain(pixelRGB);
         }  
 
+        /**
+         * Constructs a new Pixel obkect
+         * @param other another Pixel object
+         */
         protected Pixel(Pixel other) {
             this.elevation = other.getElevation();
             this.pixelX = other.getPixelX();
@@ -425,17 +437,24 @@ class Map  {
             Pixel.goalPixel = goalPixel;
         }
 
-
+        /**
+         * Converts the terrain int to a hardcoded multiplier for speed on that terrain
+         * @return double multiplier
+         */
         protected double resolveTerrainWeight() {
             //Max value double used to avoid OOB and untraversable terrain
             //TODO implement weights
             return 0;
         }
 
+        /**
+         * compares one pixel to another using their shortestPath + distance to node
+         */
         @Override
         public int compareTo(Pixel other) {
             return Double.compare(this.getShortestPathToMe() + this.computeDistanceToNodeIgnoreTerrain(goalPixel),
                                     other.getShortestPathToMe() + other.computeDistanceToNodeIgnoreTerrain(goalPixel));
+
         }
 
         /**
