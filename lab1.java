@@ -331,7 +331,7 @@ class Map {
         return distanceTravelled;
     }
 
-    
+
     /**
      * This only resets shortestPath, prevPixel, goalPixel, and frontier.
      * To be triggered for each subsequent point reached.
@@ -360,24 +360,11 @@ class Map {
 //
     protected class Pixel implements Comparable<Pixel> {
 
-        /*
-        Terrain key (in increasing difficulty assumptions):
-        0 - Paved Road
-        1 - Open Land
-        2 - Footpath
-        3 - Rough Meadow
-        4 - Easy Movement Forest
-        5 - Slow Run Forest
-        6 - Walk Forest
-        7 - Lake/Swamp/Marsh
-        8 - OOB or Impassable Vegetation
-        9 - Search Path
-        */
         private final double elevation; //height of pixel
         private final int pixelX; //Pixel X in image grid
         private final int pixelY; //Pixel y in image grid
+        private final int terrain; //derived from pixelRGB
         private int pixelRGB; //color of pixel
-        private int terrain; //derived from pixelRGB
         private double shortestPathToMe; //shortest path to this Pixel
         private Pixel prevPixel; //Pixel used to get here 
         private static Pixel goalPixel; //target pixel of algo
@@ -419,7 +406,6 @@ class Map {
          */
         protected void setAsPath() {
             this.pixelRGB = new Color(177, 86, 237).getRGB();
-            this.terrain = computeTerrain(pixelRGB);
         }
         
         /**
@@ -446,14 +432,54 @@ class Map {
             Pixel.goalPixel = goalPixel;
         }
 
+
+        /*
+        Terrain key (in increasing difficulty assumptions):
+        0 - Paved Road
+        1 - Open Land
+        2 - Footpath
+        3 - Rough Meadow
+        4 - Easy Movement Forest
+        5 - Slow Run Forest
+        6 - Walk Forest
+        7 - Lake/Swamp/Marsh
+        8 - OOB or Impassable Vegetation
+        */
+
         /**
          * Converts the terrain int to a hardcoded multiplier for speed on that terrain
          * @return double multiplier
          */
         protected double resolveTerrainWeight() {
-            //Max value double used to avoid OOB and untraversable terrain
-            //TODO implement weights
-            return 0;
+            switch (this.terrain) {
+                case 8 -> { 
+                    return Double.MAX_VALUE; //impassable
+                }
+                case 7 -> {
+                    return 8; //8x as diffcult terrain
+                }
+                case 6 -> {
+                    return 5; //5x as difficult terrain                
+                }
+                case 5 -> {
+                    return 4; //4x as difficult terrain
+                }
+                case 4 -> { 
+                    return 3; //3x as difficult terrain
+                }
+                case 3 -> {
+                    return 2; //2x as difficult terrain
+                }
+                case 2 -> {
+                    return 1.5; //1.5 as difficult terrain
+                }
+                case 1 -> {
+                    return 1; //1x as difficult terrain
+                }
+                default -> {
+                    return .8; //0.8 very easy terrain
+                }
+            }
         }
 
         /**
