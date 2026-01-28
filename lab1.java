@@ -82,9 +82,10 @@ public class lab1 {
         int curX = start[0];
         int curY = start[1];
         for(int[] p : pointsToVisit) {
-            searchMap.resetBoard();
             int destX = p[0];
             int destY = p[1];
+            searchMap.resetBoard();
+            searchMap.setGoal(destX,destY); //used to order priority queue
             int startX = curX;
             int startY = curY;
             while(curX != destX && curY != destY) {
@@ -93,7 +94,7 @@ public class lab1 {
                 curX = nextPoint[0];
                 curY = nextPoint[1];
             }
-            distanceTravelled += searchMap.backTrack(curX,curY,startX,startY);
+            distanceTravelled += searchMap.backTrack(curX,curY);
         }
         return distanceTravelled;
     }
@@ -226,6 +227,7 @@ class Map {
             if(northPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 northPixel.setShortestPathToMe(compare);
+                northPixel.setPrev(currentPixel);
                 //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(northPixel));
             }
@@ -239,6 +241,7 @@ class Map {
             if(southPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 southPixel.setShortestPathToMe(compare);
+                southPixel.setPrev(currentPixel);
                 //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(southPixel));
             }
@@ -252,6 +255,7 @@ class Map {
             if(eastPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 eastPixel.setShortestPathToMe(compare);
+                eastPixel.setPrev(currentPixel);
                 //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(eastPixel));
             }
@@ -265,6 +269,7 @@ class Map {
             if(westPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 westPixel.setShortestPathToMe(compare);
+                westPixel.setPrev(currentPixel);
                 //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(westPixel));
             }    
@@ -289,7 +294,6 @@ class Map {
         }
         int destX = nextPotential.getPixelX();
         int destY = nextPotential.getPixelY();
-        grid[destX][destY].setPrev(grid[curX][curY]);
         return new int[]{destX,destY};
     }
     
@@ -313,16 +317,21 @@ class Map {
      * Works backwards from currentX and currentY coloring pixels and keeping track of distance travelled.
      * @param curX current point X
      * @param curY current point Y
-     * @param destX (start x)
-     * @param destY (start y)
      * @return distance traveled 
      */
-    public int backTrack(int curX, int curY, int destX, int destY) {
-        //TODO: Implement backtrack algo to traverse backwards through pixels coloring them and counting distance.
-        return 0;
+    public double backTrack(int curX, int curY) {
+        Pixel p = grid[curX][curY];
+        Pixel prev = p.getPrevPixel();
+        double distanceTravelled = 0;
+        while(prev != null) {
+            distanceTravelled += p.computeDistanceToNodeIgnoreTerrain(prev);
+            p = prev;
+            prev = prev.getPrevPixel();
+        }
+        return distanceTravelled;
     }
 
-
+    
     /**
      * This only resets shortestPath, prevPixel, goalPixel, and frontier.
      * To be triggered for each subsequent point reached.
