@@ -175,6 +175,15 @@ class Map  {
     }
 
     /**
+     * Sets ending point for algo.
+     * @param endX int x cord
+     * @param endY int y cord
+     */
+    public void setGoal(int endX, int endY) {
+        Pixel.setGoalPixel(grid[endX][endY]);
+    }
+
+    /**
      * Get the pixel terrain at (X, Y). Uses getTerrain from Pixel.
      * @param pixelX int x cord
      * @param pixelY int y cord
@@ -271,6 +280,13 @@ class Map  {
         return new int[]{destX,destY};
     }
     
+    
+        /* 
+        since I'm updating the actual object each time a shorter path to a node is found
+        If something popped from the priority queue has a different shortestPathToMe
+        then the board then we can discard and pop again. It is a duplicate.
+        */
+
     /**
      * Helper function for getNextMove. Compares copy in priorityQueue to current board state to verify if it is garbage.
      * @param nextPotential pixel to check if garbage copy
@@ -295,11 +311,12 @@ class Map  {
 
 
     /**
-     * This only resets shortestPath, prevPixel, and frontier.
+     * This only resets shortestPath, prevPixel, goalPixel, and frontier.
      * To be triggered for each subsequent point reached.
      */
     public void resetBoard() {
         frontier.clear();
+        Pixel.setGoalPixel(null);
         for(Pixel[] w : grid) {
             for(Pixel p : w) {
               p.setShortestPathToMe(Double.MAX_VALUE);
@@ -318,7 +335,8 @@ class Map  {
 //
 //
 //
-    protected class Pixel {
+    protected class Pixel implements Comparable<Pixel> {
+
         /*
         Terrain key (in increasing difficulty assumptions):
         0 - Paved Road
@@ -333,18 +351,21 @@ class Map  {
         9 - Search Path
         */
         private final double elevation; //height of pixel
-        private final int pixelX;
-        private final int pixelY;
+        private final int pixelX; //Pixel X in image grid
+        private final int pixelY; //Pixel y in image grid
         private int pixelRGB; //color of pixel
         private int terrain; //derived from pixelRGB
-        private double shortestPathToMe;
-        private Pixel prevPixel;
+        private double shortestPathToMe; //shortest path to this Pixel
+        private Pixel prevPixel; //Pixel used to get here 
+        private static Pixel goalPixel; //target pixel of algo
 
         
         /**
          * Constructs a new Pixel object.
          * @param elevation double elevation
          * @param pixelRGB RGB from getRGB on image fil
+         * @param int pixelX 
+         * @param int pixelY
          */
         protected Pixel(double elevation, int pixelRGB, int pixelX, int pixelY) {
             this.elevation = elevation;
@@ -373,30 +394,43 @@ class Map  {
             this.pixelRGB = new Color(177, 86, 237).getRGB();
             this.terrain = computeTerrain(pixelRGB);
         }
-
+        
+        /**
+         * Sets the shortest path for the given node.
+         * @param shortestPathToMe dbl shortest path 
+         */
         protected void setShortestPathToMe(double shortestPathToMe) {
             this.shortestPathToMe = shortestPathToMe;
         }
 
+        /**
+         * Sets the parent node of the current node
+         * @param previous pixel
+         */
         protected void setPrev(Pixel previous) {
             this.prevPixel = previous;
         }
 
+        /**
+         * Sets the target node of the Pixel class (used by compareTo)
+         * @param previous pixel
+         */
+        protected static void setGoalPixel(Pixel goalPixel) {
+            Pixel.goalPixel = goalPixel;
+        }
 
-        protected int resolveTerrainWeight() {
+
+        protected double resolveTerrainWeight() {
+            //Max value double used to avoid OOB and untraversable terrain
             //TODO implement weights
             return 0;
         }
 
-        //TODO IMPLEMENT COMPARETO WHICH OPERATES AS THE HUERISTIC. 
-        //ONCE A NEW CHECKPOINT IS HIT CLEAR THE PRIORITY QUEUE RESETS
-        //compareTO ranks pixels based on their shortestPathToMe (current pixel) + distanceToGoal
-
-        /* 
-        since I'm updating the actual object each time a shorter path to a node is found
-        If something popped from the priority queue has a different shortestPathToMe
-        then the board then we can discard and pop again. It is a duplicate.
-        */
+        @Override
+        public int compareTo(Pixel other) {
+            return Double.compare(this.getShortestPathToMe() + this.computeDistanceToNodeIgnoreTerrain(goalPixel),
+                                    other.getShortestPathToMe() + other.computeDistanceToNodeIgnoreTerrain(goalPixel));
+        }
 
         /**
          * Uses terrain key to compute terrain integer
@@ -448,8 +482,34 @@ class Map  {
             double yDiff = curDblY - destDblY;
             double zDiff = this.elevation - dest.getElevation();
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+            double terrainWeight = dest.resolveTerrainWeight();
+            if(terrainWeight == Double.MAX_VALUE) { //deals with double overflow from mult
+                return Double.MAX_VALUE;
+            }
+            return distanceToNewNode * dest.resolveTerrainWeight();
+        }
+
+         /**
+         * Computes distance to node in 3D (ignores  terrain, used for h(n))
+         * @param cur Pixel 
+         * @param dest Pixel
+         * @return distance to node
+         */
+        protected double computeDistanceToNodeIgnoreTerrain(Pixel dest) {
+
+            //convert to meters
+            double curDblX = 10.29*this.pixelX;
+            double curDblY = 7.55*this.pixelY;
+            double destDblX = 10.29*dest.getPixelX();
+            double destDblY = 7.55*dest.getPixelY();
+
+            //compute distance
+            double xDiff = curDblX - destDblX;
+            double yDiff = curDblY - destDblY;
+            double zDiff = this.elevation - dest.getElevation();
+            double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
             
-            return distanceToNewNode + dest.resolveTerrainWeight();
+            return distanceToNewNode;
         }
         
 
