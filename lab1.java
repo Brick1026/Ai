@@ -86,8 +86,7 @@ public class lab1 {
             int destY = p[1];
             searchMap.resetBoard();
             searchMap.setGoal(destX,destY); //used to order priority queue
-            int startX = curX;
-            int startY = curY;
+            searchMap.setStart(curX,curY);
             while(curX != destX && curY != destY) {
                 searchMap.updateFrontierFromXY(curX,curY);
                 int[] nextPoint = searchMap.getNextMove(curX,curY);
@@ -224,12 +223,12 @@ class Map {
         try {
             Pixel northPixel = grid[curX][curY + 1]; //will trip try catch if off grid
             compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
-            if(northPixel.getShortestPathToMe() > compare) {
+            if(northPixel.getShortestPathToMe() >= compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 northPixel.setShortestPathToMe(compare);
                 northPixel.setPrev(currentPixel);
-                //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(northPixel));
+                //add Pixel deeep copy to frontier (disconnect from original object)
             }
         } catch (IndexOutOfBoundsException e) {
             //If we step out of bounds of the image nothing to do
@@ -238,12 +237,12 @@ class Map {
         try {
             Pixel southPixel = grid[curX][curY - 1];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
-            if(southPixel.getShortestPathToMe() > compare) {
+            if(southPixel.getShortestPathToMe() >= compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 southPixel.setShortestPathToMe(compare);
                 southPixel.setPrev(currentPixel);
-                //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(southPixel));
+                //add Pixel deeep copy to frontier (disconnect from original object)
             }
         } catch (IndexOutOfBoundsException  e) {
              //If we step out of bounds of the image nothing to do
@@ -252,12 +251,12 @@ class Map {
         try {
             Pixel eastPixel = grid[curX-1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
-            if(eastPixel.getShortestPathToMe() > compare) {
+            if(eastPixel.getShortestPathToMe() >= compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 eastPixel.setShortestPathToMe(compare);
                 eastPixel.setPrev(currentPixel);
-                //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(eastPixel));
+                //add Pixel deeep copy to frontier (disconnect from original object)
             }
         } catch (IndexOutOfBoundsException e) {
             //If we step out of bounds of the image nothing to do
@@ -266,13 +265,16 @@ class Map {
         try {
             Pixel westPixel = grid[curX+1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
-            if(westPixel.getShortestPathToMe() > compare) {
+            // System.out.println(compare);
+            // System.out.println(westPixel.getShortestPathToMe());
+            if(westPixel.getShortestPathToMe() >= compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 westPixel.setShortestPathToMe(compare);
                 westPixel.setPrev(currentPixel);
-                //add Pixel deeep copy to frontier (disconnect from original object)
                 frontier.add(new Pixel(westPixel));
+                //add Pixel deeep copy to frontier (disconnect from original object)
             }    
+
         } catch (IndexOutOfBoundsException e) {
             //If we step out of bounds of the image nothing to do
         }
@@ -365,6 +367,7 @@ class Map {
         private final int pixelY; //Pixel y in image grid
         private final int terrain; //derived from pixelRGB
         private int pixelRGB; //color of pixel
+        private boolean visited;
         private double shortestPathToMe; //shortest path to this Pixel
         private Pixel prevPixel; //Pixel used to get here 
         private static Pixel goalPixel; //target pixel of algo
@@ -384,6 +387,7 @@ class Map {
             this.pixelY = pixelY;
             this.shortestPathToMe = Double.MAX_VALUE;
             this.prevPixel = null;
+            this.visited = false;
             this.terrain = computeTerrain(pixelRGB);
         }  
 
@@ -397,7 +401,12 @@ class Map {
             this.pixelY = other.getPixelY();
             this.pixelRGB = other.getRGB();
             this.terrain = other.getTerrain();
-            this.prevPixel = new Pixel(other.getPrevPixel());
+            this.visited = other.isVisited();
+            if(other.prevPixel == null) {
+                this.prevPixel = null;
+            } else {
+                this.prevPixel = other.getPrevPixel();
+            }
             this.shortestPathToMe = other.getShortestPathToMe();
         }
 
@@ -456,28 +465,28 @@ class Map {
                     return Double.MAX_VALUE; //impassable
                 }
                 case 7 -> {
-                    return 8; //8x as diffcult terrain
+                    return 1; 
                 }
                 case 6 -> {
-                    return 5; //5x as difficult terrain                
+                    return .9;              
                 }
                 case 5 -> {
-                    return 4; //4x as difficult terrain
+                    return .8; 
                 }
                 case 4 -> { 
-                    return 3; //3x as difficult terrain
+                    return .6; 
                 }
                 case 3 -> {
-                    return 2; //2x as difficult terrain
+                    return .4; 
                 }
                 case 2 -> {
-                    return 1.5; //1.5 as difficult terrain
+                    return .3; 
                 }
                 case 1 -> {
-                    return 1; //1x as difficult terrain
+                    return .25; 
                 }
                 default -> {
-                    return .8; //0.8 very easy terrain
+                    return .2; 
                 }
             }
         }
@@ -619,6 +628,14 @@ class Map {
 
         protected Pixel getPrevPixel() {
             return prevPixel;
+        }
+
+        public void setVisited(boolean visited) {
+            this.visited = visited;
+        }
+
+        public boolean isVisited() {
+            return visited;
         }
         
     }
