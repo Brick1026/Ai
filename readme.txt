@@ -1,6 +1,8 @@
-Test: simple distance calculation test. Move along the x axis 
+Test: Routes a "maze" with water pixel "walls"
 
 Elevation: Flat
 
-Expected path: Path and distance should match exactly (-precision error).  
+Expected path: The should snake around the water, distance should match exactly (-precision error).
+Your water penalty should be high enough that you do not route through it to save <100 m
+
 Expected run time: <10s

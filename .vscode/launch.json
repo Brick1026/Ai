@@ -13,7 +13,7 @@
             "args": [
                 "terrain.png",
                 "mpp.txt",
-                "red.txt",
+                "path.txt",
                 "terrain2.png"
             ]
         }

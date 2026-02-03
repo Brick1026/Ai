@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
@@ -82,15 +81,16 @@ public class lab1 {
         int curX = start[0];
         int curY = start[1];
         for(int[] p : pointsToVisit) {
+        // System.out.println(Arrays.toString(p));
             int destX = p[0];
             int destY = p[1];
             searchMap.resetBoard();
             searchMap.setGoal(destX,destY); //used to order priority queue
             searchMap.setStart(curX,curY);
-            while(curX != destX && curY != destY) {
+            while(curX != destX || curY != destY) {
                 searchMap.updateFrontierFromXY(curX,curY);
                 int[] nextPoint = searchMap.getNextMove(curX,curY);
-                System.out.println("Next Point: " + curX + " " + curY);
+                //System.out.println("Next Point: " + curX + " " + curY);
                 curX = nextPoint[0];
                 curY = nextPoint[1];
             }
@@ -106,7 +106,7 @@ class Map {
     private int width;
     private int height;
     private Pixel[][] grid;
-    private PriorityQueue<Pixel> frontier = new PriorityQueue<>(Comparator.reverseOrder());
+    private PriorityQueue<Pixel> frontier = new PriorityQueue<>();
 
     /**
      * Constructs a new Map object.
@@ -218,6 +218,7 @@ class Map {
      * @param curY y position to explore frontier from.
      */
     public void updateFrontierFromXY(int curX, int curY) {
+        //System.out.println("update");
         Pixel currentPixel = grid[curX][curY];
         double compare;
 
@@ -258,7 +259,7 @@ class Map {
             Pixel eastPixel = grid[curX-1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
             // System.out.println("Distance to east pixel: " + compare);
-            // System.out.println("Current Distance to get Here " + eastPixel.getShortestPathToMe());
+            //  System.out.println("Current Distance to get Here " + eastPixel.getShortestPathToMe());
             if(eastPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 eastPixel.setShortestPathToMe(compare);
@@ -481,7 +482,7 @@ class Map {
                     return .8; 
                 }
                 case 4 -> { 
-                    return .7; 
+                    return .5; 
                 }
                 case 3 -> {
                     return .4; 
