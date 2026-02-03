@@ -90,7 +90,7 @@ public class lab1 {
             while(curX != destX && curY != destY) {
                 searchMap.updateFrontierFromXY(curX,curY);
                 int[] nextPoint = searchMap.getNextMove(curX,curY);
-                System.out.println("Next Point: " + curX + " " + curY);
+                //System.out.println("Next Point: " + curX + " " + curY);
                 curX = nextPoint[0];
                 curY = nextPoint[1];
             }
@@ -221,9 +221,12 @@ class Map {
         Pixel currentPixel = grid[curX][curY];
         double compare;
 
+        //System.out.println("current pixel distance to get here: " + currentPixel.getShortestPathToMe());
         try {
             Pixel northPixel = grid[curX][curY + 1]; //will trip try catch if off grid
             compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
+            // System.out.println("Distance to north pixel: " + compare);
+            // System.out.println("Current Distance to get Here " + northPixel.getShortestPathToMe());
             if(northPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 northPixel.setShortestPathToMe(compare);
@@ -238,6 +241,8 @@ class Map {
         try {
             Pixel southPixel = grid[curX][curY - 1];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
+            // System.out.println("Distance to south pixel: " + compare);
+            // System.out.println("Current Distance to get Here " + southPixel.getShortestPathToMe());
             if(southPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 southPixel.setShortestPathToMe(compare);
@@ -252,6 +257,8 @@ class Map {
         try {
             Pixel eastPixel = grid[curX-1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
+            // System.out.println("Distance to east pixel: " + compare);
+            // System.out.println("Current Distance to get Here " + eastPixel.getShortestPathToMe());
             if(eastPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 eastPixel.setShortestPathToMe(compare);
@@ -266,8 +273,8 @@ class Map {
         try {
             Pixel westPixel = grid[curX+1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
-            // System.out.println(compare);
-            // System.out.println(westPixel.getShortestPathToMe());
+            // System.out.println("Distance to west pixel: " + compare);
+            // System.out.println("Current Distance to get Here " + westPixel.getShortestPathToMe());
             if(westPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 westPixel.setShortestPathToMe(compare);
@@ -324,11 +331,13 @@ class Map {
      */
     public double backTrack(int curX, int curY) {
         Pixel p = grid[curX][curY];
+        p.setAsPath();
         Pixel prev = p.getPrevPixel();
         double distanceTravelled = 0;
         while(prev != null) {
             distanceTravelled += p.computeDistanceToNodeIgnoreTerrain(prev);
             p = prev;
+            p.setAsPath();
             prev = prev.getPrevPixel();
         }
         return distanceTravelled;
@@ -368,7 +377,6 @@ class Map {
         private final int pixelY; //Pixel y in image grid
         private final int terrain; //derived from pixelRGB
         private int pixelRGB; //color of pixel
-        private boolean visited;
         private double shortestPathToMe; //shortest path to this Pixel
         private Pixel prevPixel; //Pixel used to get here 
         private static Pixel goalPixel; //target pixel of algo
@@ -388,7 +396,6 @@ class Map {
             this.pixelY = pixelY;
             this.shortestPathToMe = Double.MAX_VALUE;
             this.prevPixel = null;
-            this.visited = false;
             this.terrain = computeTerrain(pixelRGB);
         }  
 
@@ -402,7 +409,6 @@ class Map {
             this.pixelY = other.getPixelY();
             this.pixelRGB = other.getRGB();
             this.terrain = other.getTerrain();
-            this.visited = other.isVisited();
             if(other.prevPixel == null) {
                 this.prevPixel = null;
             } else {
@@ -475,7 +481,7 @@ class Map {
                     return .8; 
                 }
                 case 4 -> { 
-                    return .6; 
+                    return .7; 
                 }
                 case 3 -> {
                     return .4; 
@@ -554,9 +560,9 @@ class Map {
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
             double terrainWeight = dest.resolveTerrainWeight();
             if(terrainWeight == Double.MAX_VALUE) { //deals with double overflow from mult
-                return Double.MAX_VALUE;
+                return Double.MAX_VALUE/2;
             }
-            return distanceToNewNode * dest.resolveTerrainWeight();
+            return distanceToNewNode * terrainWeight;
         }
 
          /**
@@ -631,14 +637,6 @@ class Map {
             return prevPixel;
         }
 
-        public void setVisited(boolean visited) {
-            this.visited = visited;
-        }
-
-        public boolean isVisited() {
-            return visited;
-        }
-        
     }
 
 }
