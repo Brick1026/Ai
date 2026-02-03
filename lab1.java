@@ -90,7 +90,7 @@ public class lab1 {
             while(curX != destX && curY != destY) {
                 searchMap.updateFrontierFromXY(curX,curY);
                 int[] nextPoint = searchMap.getNextMove(curX,curY);
-                //System.out.println("Next Point: " + curX + " " + curY);
+                System.out.println("Next Point: " + curX + " " + curY);
                 curX = nextPoint[0];
                 curY = nextPoint[1];
             }
