@@ -90,6 +90,7 @@ public class lab1 {
             while(curX != destX && curY != destY) {
                 searchMap.updateFrontierFromXY(curX,curY);
                 int[] nextPoint = searchMap.getNextMove(curX,curY);
+                System.out.println("Next Point: " + curX + " " + curY);
                 curX = nextPoint[0];
                 curY = nextPoint[1];
             }
@@ -223,7 +224,7 @@ class Map {
         try {
             Pixel northPixel = grid[curX][curY + 1]; //will trip try catch if off grid
             compare =  currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(northPixel);
-            if(northPixel.getShortestPathToMe() >= compare) {
+            if(northPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 northPixel.setShortestPathToMe(compare);
                 northPixel.setPrev(currentPixel);
@@ -237,7 +238,7 @@ class Map {
         try {
             Pixel southPixel = grid[curX][curY - 1];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(southPixel);
-            if(southPixel.getShortestPathToMe() >= compare) {
+            if(southPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 southPixel.setShortestPathToMe(compare);
                 southPixel.setPrev(currentPixel);
@@ -251,7 +252,7 @@ class Map {
         try {
             Pixel eastPixel = grid[curX-1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
-            if(eastPixel.getShortestPathToMe() >= compare) {
+            if(eastPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 eastPixel.setShortestPathToMe(compare);
                 eastPixel.setPrev(currentPixel);
@@ -267,7 +268,7 @@ class Map {
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
             // System.out.println(compare);
             // System.out.println(westPixel.getShortestPathToMe());
-            if(westPixel.getShortestPathToMe() >= compare) {
+            if(westPixel.getShortestPathToMe() > compare) {
                 //add shortest distance g(n) into node not accounting for hueristic
                 westPixel.setShortestPathToMe(compare);
                 westPixel.setPrev(currentPixel);
