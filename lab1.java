@@ -140,6 +140,12 @@ class Map {
             System.exit(-1);
         }
 
+        // for(double[] da : elevationArray) {
+        //     for(double d : da) {
+        //         System.out.println(d);
+        //     }
+        // }
+
         //Construct grid of pixels
         for(int i = 0; i < width; i++) {
             for(int j = 0; j < height; j++) {
@@ -558,10 +564,11 @@ class Map {
             double xDiff = curDblX - destDblX;
             double yDiff = curDblY - destDblY;
             double zDiff = this.elevation - dest.getElevation();
+            //System.out.println(zDiff);
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
             double terrainWeight = dest.resolveTerrainWeight();
             if(terrainWeight == Double.MAX_VALUE) { //deals with double overflow from mult
-                return Double.MAX_VALUE/2;
+                return Double.MAX_VALUE;
             }
             return distanceToNewNode * terrainWeight;
         }
