@@ -336,7 +336,7 @@ class Map {
         Pixel prev = p.getPrevPixel();
         double distanceTravelled = 0;
         while(prev != null) {
-            distanceTravelled += p.computeDistanceToNodeIgnoreTerrain(prev);
+            distanceTravelled += p.computeDistanceToNodeIn2D(prev);
             p = prev;
             p.setAsPath();
             prev = prev.getPrevPixel();
@@ -470,7 +470,7 @@ class Map {
         protected double resolveTerrainWeight() {
             switch (this.terrain) {
                 case 8 -> { 
-                    return Double.MAX_VALUE; //impassable
+                    return Integer.MAX_VALUE; //impassable
                 }
                 case 7 -> {
                     return 1; 
@@ -585,6 +585,28 @@ class Map {
             double yDiff = curDblY - destDblY;
             double zDiff = this.elevation - dest.getElevation();
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+            
+            return distanceToNewNode;
+        }
+
+          /**
+         * Computes distance to node in 2D (ignores  terrain, used for backtrack)
+         * @param cur Pixel 
+         * @param dest Pixel
+         * @return distance to node
+         */
+        protected double computeDistanceToNodeIn2D(Pixel dest) {
+
+            //convert to meters
+            double curDblX = 10.29*this.pixelX;
+            double curDblY = 7.55*this.pixelY;
+            double destDblX = 10.29*dest.getPixelX();
+            double destDblY = 7.55*dest.getPixelY();
+
+            //compute distance
+            double xDiff = curDblX - destDblX;
+            double yDiff = curDblY - destDblY;
+            double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2));
             
             return distanceToNewNode;
         }
