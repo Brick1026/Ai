@@ -127,7 +127,7 @@ class Map {
                     String line = scanny.nextLine();
                     line = line.trim();
                     String[] words = line.split("\\s+");
-                    for(int i = 0; i < width - 5; i++) {
+                    for(int i = 0; i < width; i++) {
                         elevationArray[i][j] = Double.parseDouble(words[i]);
                     }
                     j++;
@@ -489,28 +489,28 @@ class Map {
                     return Integer.MAX_VALUE; //impassable
                 }
                 case 7 -> {
-                    return 1; 
+                    return 3; 
                 }
                 case 6 -> {
-                    return .9;              
+                    return 2;              
                 }
                 case 5 -> {
-                    return .8; 
+                    return 1.5; 
                 }
                 case 4 -> { 
-                    return .5; 
+                    return 1; 
                 }
                 case 3 -> {
-                    return .4; 
+                    return .6; 
                 }
                 case 2 -> {
                     return .3; 
                 }
                 case 1 -> {
-                    return .25; 
+                    return .2; 
                 }
                 default -> {
-                    return .2; 
+                    return .1; 
                 }
             }
         }
@@ -598,6 +598,7 @@ class Map {
             double xDiff = curDblX - destDblX;
             double yDiff = curDblY - destDblY;
             double zDiff = this.elevation - dest.getElevation();
+            //System.out.println(zDiff);
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
             //System.out.println(distanceToNewNode);
             
