@@ -489,28 +489,28 @@ class Map {
                     return Integer.MAX_VALUE; //impassable
                 }
                 case 7 -> {
-                    return 3; 
-                }
-                case 6 -> {
-                    return 2;              
-                }
-                case 5 -> {
-                    return 1.5; 
-                }
-                case 4 -> { 
                     return 1; 
                 }
+                case 6 -> {
+                    return .9;              
+                }
+                case 5 -> {
+                    return .8; 
+                }
+                case 4 -> { 
+                    return .5; 
+                }
                 case 3 -> {
-                    return .6; 
+                    return .4; 
                 }
                 case 2 -> {
-                    return .3; 
-                }
-                case 1 -> {
                     return .2; 
                 }
-                default -> {
+                case 1 -> {
                     return .1; 
+                }
+                default -> {
+                    return .05; 
                 }
             }
         }
@@ -520,8 +520,8 @@ class Map {
          */
         @Override
         public int compareTo(Pixel other) {
-            return Double.compare(this.getShortestPathToMe() + this.computeDistanceToNodeIgnoreTerrain(goalPixel),
-                                    other.getShortestPathToMe() + other.computeDistanceToNodeIgnoreTerrain(goalPixel));
+            return Double.compare(this.getShortestPathToMe() + this.computeDistanceToNodeIgnoreTerrain(goalPixel)*.05,
+                                    other.getShortestPathToMe() + other.computeDistanceToNodeIgnoreTerrain(goalPixel)*.05);
 
         }
 
@@ -579,6 +579,7 @@ class Map {
             double terrainWeight = dest.resolveTerrainWeight();
             return distanceToNewNode * terrainWeight;
         }
+        
 
          /**
          * Computes distance to node in 3D (ignores  terrain, used for h(n))
@@ -611,7 +612,7 @@ class Map {
          * @param dest Pixel
          * @return distance to node
          */
-        protected double computeDistanceToNodeIn2D(Pixel dest) {
+        protected double computeDistanceToNodeIn2DIgnoreTerrain(Pixel dest) {
 
             //convert to meters
             double curDblX = 10.29*this.pixelX;
