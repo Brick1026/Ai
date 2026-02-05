@@ -93,6 +93,7 @@ public class lab1 {
                 //System.out.println("Next Point: " + curX + " " + curY);
                 curX = nextPoint[0];
                 curY = nextPoint[1];
+                searchMap.getShortestPathAtXY(curX,curY);
             }
             distanceTravelled += searchMap.backTrack(curX,curY);
         }
@@ -214,6 +215,15 @@ class Map {
         return grid[pixelX][pixelY].getElevation();
     }
 
+    /**
+     * Get shortestPath at (X, Y). Uses getShortestPath from Pixel.
+     * @param pixelX int x cord
+     * @param pixelY int y cord
+     */
+    public double getShortestPathAtXY(int pixelX, int pixelY) {
+        return grid[pixelX][pixelY].getShortestPathToMe();
+    }
+
     // Search functions //
 
     /**
@@ -262,7 +272,7 @@ class Map {
         }
      
         try {
-            Pixel eastPixel = grid[curX-1][curY];
+            Pixel eastPixel = grid[curX+1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(eastPixel);
             // System.out.println("Distance to east pixel: " + compare);
             //  System.out.println("Current Distance to get Here " + eastPixel.getShortestPathToMe());
@@ -278,7 +288,7 @@ class Map {
         }
 
         try {
-            Pixel westPixel = grid[curX+1][curY];
+            Pixel westPixel = grid[curX-1][curY];
             compare = currentPixel.getShortestPathToMe() + currentPixel.computeDistanceToNode(westPixel);
             // System.out.println("Distance to west pixel: " + compare);
             // System.out.println("Current Distance to get Here " + westPixel.getShortestPathToMe());
@@ -342,7 +352,7 @@ class Map {
         Pixel prev = p.getPrevPixel();
         double distanceTravelled = 0;
         while(prev != null) {
-            distanceTravelled += p.computeDistanceToNodeIn2D(prev);
+            distanceTravelled += p.computeDistanceToNodeIgnoreTerrain(prev);
             p = prev;
             p.setAsPath();
             prev = prev.getPrevPixel();
@@ -567,9 +577,6 @@ class Map {
             //System.out.println(zDiff);
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
             double terrainWeight = dest.resolveTerrainWeight();
-            if(terrainWeight == Double.MAX_VALUE) { //deals with double overflow from mult
-                return Double.MAX_VALUE;
-            }
             return distanceToNewNode * terrainWeight;
         }
 
@@ -592,6 +599,7 @@ class Map {
             double yDiff = curDblY - destDblY;
             double zDiff = this.elevation - dest.getElevation();
             double distanceToNewNode = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff,2) +  Math.pow(zDiff,2));
+            //System.out.println(distanceToNewNode);
             
             return distanceToNewNode;
         }
