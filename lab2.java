@@ -1,6 +1,7 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -185,12 +186,9 @@ class KB {
 
 class Clause {
     private ArrayList<Predicate> predicates;
-    
+    private HashMap<Term,Term> substitutions = new HashMap<>();
 
     //TODO: Add toString to test read in
-
-
-    //TODO: Add Clause Resolution function
 
     /**
      * Creates a clause from a predicate ArrayList
@@ -209,7 +207,7 @@ class Clause {
         ArrayList<Predicate> predArr = clause.getPredicates();
         ArrayList<Predicate> predArrDeepCopy = new ArrayList<>();
         for(Predicate p : predArr) {
-            predArrDeepCopy.add(new Predicate(p));
+            predArrDeepCopy.add(new Predicate(p,this));
         }
         this.predicates = predArrDeepCopy;
     }
@@ -221,6 +219,15 @@ class Clause {
     public ArrayList<Predicate> getPredicates() {
         return predicates;
     }
+    
+    /**
+     * Get active substitions
+     * @return subsitions HashMap
+     */
+    public HashMap<Term, Term> getSubstitutions() {
+        return substitutions;
+    }
+
 
 }
 
@@ -246,24 +253,21 @@ class Predicate {
     private boolean isNegated; //negation state of predicate
 
     private final String name; //String name 
+
+    private Clause parentClause;
  
 
     /**
      * Checks if two predicates can resolve. 
-     * If yes, return the result of the resolution.
-     * If no, return null;
-     * If resolution produces empty clause will activate contradiction flag.
      * @param other predicate to resolve with
-     * @return NULL or resolved Predicate
+     * @return true or flase based on if resolution succeeded
      */
-    public Predicate resolve(Predicate other) {
-        ArrayList<Term> newPredicateTermList = new ArrayList<>();
-
+    public boolean resolve(Predicate other) {
         if(this.isInverse(other)) { //check predicates are inverses (same name and opposite polarity)
             int thisTermListSize = terms.size();
             int otherTermListSize = other.getTerms().size();
             if(thisTermListSize != otherTermListSize) {
-                return null; //different arity. Can't unify.
+                return false; //different arity. Can't unify.
             }
 
             for(int i = 0; i < thisTermListSize; i++) {
@@ -272,13 +276,14 @@ class Predicate {
 
                 Term result = thisTerm.unify(otherTerm); //unify two terms
                 if(result == null) {
-                    return null; //two terms do not unify. Return null.
+                    return false; //two terms do not unify. Return null.
                 } else {
-                    newPredicateTermList.add(result);
+                    parentClause.getSubstitutions().put(thisTerm,result);
+                    parentClause.getSubstitutions().put(otherTerm,result);
                 }
             }
-            
-            return new Predicate(name, false, newPredicateTermList); //valid new predicate can be made
+
+            return true;
         }
 
         return null; //not inverses. You can't unify.
@@ -330,10 +335,11 @@ class Predicate {
     }
 
     /**
-     * Deep clones a predicate 
+     * Deep clones a predicate and sets parent clause to c
      * @param p
      */
-    public Predicate(Predicate p) {
+    public Predicate(Predicate p, Clause c) {
+        this.parentClause = c;
         this.id = p.getId();
         this.name = p.getName();
         this.isNegated = p.isNegated();
@@ -354,38 +360,22 @@ class Predicate {
      * @param name name of the predicate
      * @param isNegated negation status of predicate
      */
-    public Predicate(String name, boolean isNegated, ArrayList<Term> terms) {
+    public Predicate(String name, boolean isNegated, ArrayList<Term> terms, Clause c) {
         Integer lid;
+        this.parentClause = c;
+        this.name = name;
+        this.isNegated = isNegated;
+        this.terms = terms;
         if((lid = nameIdPairs.get(name)) != null) { //already have a pedicate and id
             this.id = lid;
-            this.name = name;
-            this.isNegated = isNegated;
-            this.terms = terms;
         } else { //new predicate so we should assign id and incr count
             this.id = predicateCount;
-            this.name = name;
-            this.isNegated = isNegated;
-            this.terms = terms;
-            
             //add to hashmap and increment id counter
             nameIdPairs.put(this.name,this.id);
             predicateCount++;
         }
         visited.add(this);
     }
-
-    /**
-     * Converts a term to a predicate. For internal processing only. Not logically sound.
-     * @param t Term to convert
-     * @param isNegated if to negate
-     * @return the new Predicate object
-     */
-    public static Predicate asPredicate(Term t, boolean isNegated) {
-        ArrayList<Term> myArr = new ArrayList<>();
-        myArr.add(t);
-        return new Predicate(t.getName(),isNegated,myArr);
-    }
-    
 
     /**
      * Gets the id of the current predicate
@@ -402,6 +392,14 @@ class Predicate {
      */
     private boolean isNegated() {
         return isNegated;
+    }
+
+    /**
+     * Gets the String name of Predicate
+     * @return name
+     */
+    public void setAsParent(Clause c) {
+        parentClause = c;
     }
 
     /**
@@ -434,7 +432,7 @@ abstract class Term {
                           //(weaker equals basically)
 
     //should never trigger. You can't have a generic term.
-    Term unify(Term otherParam) {
+    Term[] unify(Term otherParam) {
         throw new Error("This should never be triggered. You can't have a generic term.");
     }
 
@@ -497,22 +495,40 @@ abstract class Term {
 
 class Const extends Term {
 
-    //unification polymorphism
-    public Term unify(Const other) {
+    /**
+     * Unify a const and a const. 
+     * @param other another const
+     * @return Return a redundant mapping if same (skip) otherwise null cause these never unify.
+     */
+    public Term[] unify(Const other) {
         if(this.equals(other)) {
-            return this;
+            return new Term[]{this,this}; //same constant, map to itself.
         }
         return null;
     }
 
-    public Term unify(Func other) {
+    /**
+     * Unify a const and a function
+     * @param other a function
+     * @return null. These never unify.
+     */
+    public Term[] unify(Func other) {
         return null;
     }
 
-    public Term unify(Var other) {
-        return this;
+    /**
+     * Unify a variable and const
+     * @param other variable
+     * @return a mapping of the variable to the const. These always unify.
+     */
+    public Term[] unify(Var other) {
+        return new Term[]{other,this}; 
     }
 
+    /**
+     * Basic constructor. Simply uses parent.
+     * @param name The name of the term.
+     */
     public Const(String name) {
         super(name);
     }
@@ -521,46 +537,72 @@ class Const extends Term {
 class Func extends Term {
     private Term parameter;
     
-    public Term unify(Const other) {
+    /**
+     * Unify a function and constant
+     * @param other constant
+     * @return null. This never unifies.
+     */
+    public Term[] unify(Const other) {
         return null;
     }
 
-    public Term unify(Func other) {
+    /**
+     * Tries to unify two funtions
+     * @param other another functions
+     * @return Term[] representing a mapping if parameters unify and same function otherwise null.
+     */
+    public Term[] unify(Func other) {
         if(this.getId() != other.getId()) { //check same symbol
             return null; //different functions, will not unify
         }
     
         Term otherParam = other.getParameter();
-        Term result = this.getParameter().unify(otherParam);
-        if(result == null) {
-            return null; //can't unify terms 
-        } else {
-            Func unifiedFunction = new Func(this.getName(),result);
-            return unifiedFunction;
-        }
+        return this.getParameter().unify(otherParam);
     }
 
-    public Term unify(Var other) {
+    /**
+     * unify a function with a variable
+     * @param other variable
+     * @return Term[] representing a mapping if possible otherwise null.
+     */
+    public Term[] unify(Var other) {
         if(!parameter.equals(other)) { //if function doesn't contain variable
-            return this;
+            return new Term[]{other, this};
         }
         return null; //if function contains variable
     }
 
+    /**
+     * Create a new function term
+     * @param name function name
+     * @param parameter function parameter
+     */
     public Func(String name, Term parameter) {
         super(name);
         this.parameter = parameter;
     }
 
+    /**
+     * Create a deepcopy new function term from another function
+     * @param f Function to use
+     */
     public Func(Func f) {
         super(f);
         this.parameter = f.getParameter();
     }
 
+    /**
+     * Set the parameter for am funtion
+     * @param p The value of the parameter
+     */
     public void setParameter(Term p) {
         this.parameter = p;
     }
 
+    /**
+     * Get the parameter for a function.
+     * @return the parameter
+     */
     public Term getParameter() {
         return this.parameter;
     }
@@ -595,6 +637,12 @@ class Func extends Term {
 class Var extends Term {
     
     //unification polymorphism
+
+    /**
+     * 
+     * @param other
+     * @return
+     */
     public Term unify(Const other) {
         return other;
     }
