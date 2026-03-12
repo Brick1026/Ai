@@ -124,6 +124,9 @@ public class lab2 {
             System.exit(-1);
         }
 
+
+        System.out.println(myKnowledgeBase);
+        
          myKnowledgeBase.prove();
          if(myKnowledgeBase.holds()) {
             System.out.println("yes");
