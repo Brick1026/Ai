@@ -139,11 +139,6 @@ class KB {
     private boolean contradiction;
     private boolean proved;
 
-
-    //TODO: Add toString to test read in
-
-
-
     /**
      * Representation on a Knowledge Base
      */
@@ -151,6 +146,17 @@ class KB {
         clauses = new ArrayList<>();
         contradiction = false;
         proved = false;
+    }
+
+    
+    @Override
+    public String toString() {
+        int count = 1;
+        String ret = "";
+        for(Clause c : clauses) {
+            ret+= "#" + count + " " + c.toString();
+        }
+        return ret + "\n";
     }
 
     /**
@@ -166,6 +172,11 @@ class KB {
      */
     public void prove() {
         //TODO: Implement resolution algo
+        //for each clause 
+            //for each clause
+                //resolve (a,b)
+                //if this yields a new clause add it
+                //otherwise discard it
     }
 
     /**
@@ -175,19 +186,24 @@ class KB {
     public boolean holds() {
         return !contradiction && proved;
     }
-
-    @Override
-    public String toString() {
-        //TODO: Implement toString to verify functional read in.
-        return "";
-    }
 }
 
 class Clause {
+    static HashSet<Clause> visited = new HashSet<>();
     private ArrayList<Predicate> predicates;
     private HashMap<Term,Term> substitutions = new HashMap<>();
 
-    //TODO: Add toString to test read in
+    @Override
+    public String toString() {
+        String ret = """
+                     Clause:
+                     """;
+        for(Predicate p : predicates) {
+            ret+= "\t" + p.toString() + "\n";
+        }
+
+        return ret + "\n";
+    }
 
     /**
      * Creates a clause from a predicate ArrayList
@@ -198,6 +214,7 @@ class Clause {
         for(Predicate p : this.predicates) { //mark each predicate with this clause as parent
             p.setAsParent(this);
         }
+        visited.add(this);
     }
 
      /**
@@ -214,6 +231,12 @@ class Clause {
         this.predicates = predArrDeepCopy;
     }
 
+
+    public Clause resolve(Clause other) {
+        //TODO: implement
+        return null;
+    }
+    
     /**
      * Get predicate arraylist
      * @return Predicates
@@ -221,6 +244,7 @@ class Clause {
     public ArrayList<Predicate> getPredicates() {
         return predicates;
     }
+
     
     /**
      * add a substitution. 
@@ -238,8 +262,30 @@ class Clause {
         return substitutions.get(t);
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((predicates == null) ? 0 : predicates.hashCode());
+        return result;
+    }
 
-
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Clause other = (Clause) obj;
+        if (predicates == null) {
+            if (other.predicates != null)
+                return false;
+        } else if (!predicates.equals(other.predicates))
+            return false;
+        return true;
+    }
 }
 
 class Predicate {
@@ -250,10 +296,6 @@ class Predicate {
     //Two predicates must share BOTH a name and id if they share either.
     //These two predicates are the same.
     private static HashMap<String,Integer> nameIdPairs = new HashMap<>();
-
-    //Have we seen this a predicate with these parameters before? (may not be needed)
-    private static HashSet<Predicate> visited = new HashSet<>();
-
 
     private final ArrayList<Term> terms; //the terms for the predicate
 
@@ -266,7 +308,62 @@ class Predicate {
     private final String name; //String name 
 
     private Clause parentClause;
- 
+    
+     /**
+     * Deep clones a predicate and sets parent clause to c
+     * @param p
+     */
+    public Predicate(Predicate p, Clause c) {
+        this.parentClause = c;
+        this.id = p.getId();
+        this.name = p.getName();
+        this.isNegated = p.isNegated();
+        this.terms = new ArrayList<>();
+        for(Term t : p.getTerms()) {
+            switch (t) {
+                case Func func -> this.terms.add(new Func(func));
+                case Const cnst -> this.terms.add(new Const(cnst.getName()));
+                case Var var -> this.terms.add(new Var(var.getName()));
+                default -> throw new Error("Unexpected generic term.");
+            }
+        }
+    }
+
+    /**
+     * Creates a new predicate and assigns it a new ID if it doesn't exsist.
+     * If the ID already exsists then a new predicate is made with the same ID.
+     * @param name name of the predicate
+     * @param isNegated negation status of predicate
+     */
+    public Predicate(String name, boolean isNegated, ArrayList<Term> terms) {
+        Integer lid;
+        this.name = name;
+        this.isNegated = isNegated;
+        this.terms = terms;
+        if((lid = nameIdPairs.get(name)) != null) { //already have a pedicate and id
+            this.id = lid;
+        } else { //new predicate so we should assign id and incr count
+            this.id = predicateCount;
+            //add to hashmap and increment id counter
+            nameIdPairs.put(this.name,this.id);
+            predicateCount++;
+        }
+    }
+
+    /**
+     * To String override for debugging purposes
+     */
+    @Override
+    public String toString() {
+        String predicate = name + "<" + id + ", " + !isNegated + ">\n" ;
+        String terStr = "";
+        for(Term t : this.terms) {
+            terStr+="\t" + t + "\n";
+        }
+
+        return predicate + terStr;
+    }
+    
     /**
      * Checks if two predicates can resolve. 
      * @param other predicate to resolve with
@@ -309,11 +406,20 @@ class Predicate {
     }
 
     /**
-     * To String override for debugging purposes
+     * Checks if this is an equal inverse of p
+     * @param p other predicate
+     * @return boolean true or false
      */
-    @Override
-    public String toString() {
-        return name + "<" + id + ", " + !isNegated + ">";
+    public boolean isInverse(Predicate p) {
+        return this.equals(p) && (this.isNegated != p.isNegated());
+    }
+
+    /**
+     * Sets parent clause
+     * @param clause c
+     */
+    public void setAsParent(Clause c) {
+        parentClause = c;
     }
 
     @Override
@@ -343,56 +449,21 @@ class Predicate {
         }
         return Objects.equals(this.name, other.name);
     }
-
+    
     /**
-     * Checks if this is an equal inverse of p
-     * @param p other predicate
-     * @return boolean true or false
+     * Gets the String name of Predicate
+     * @return name
      */
-    public boolean isInverse(Predicate p) {
-        return this.equals(p) && (this.isNegated != p.isNegated());
+    private String getName() {
+        return name;
     }
 
     /**
-     * Deep clones a predicate and sets parent clause to c
-     * @param p
+     * Gets term list
+     * @return terms
      */
-    public Predicate(Predicate p, Clause c) {
-        this.parentClause = c;
-        this.id = p.getId();
-        this.name = p.getName();
-        this.isNegated = p.isNegated();
-        this.terms = new ArrayList<>();
-        for(Term t : p.getTerms()) {
-            switch (t) {
-                case Func func -> this.terms.add(new Func(func));
-                case Const cnst -> this.terms.add(new Const(cnst.getName()));
-                case Var var -> this.terms.add(new Var(var.getName()));
-                default -> throw new Error("Unexpected generic term.");
-            }
-        }
-    }
-
-    /**
-     * Creates a new predicate and assigns it a new ID if it doesn't exsist.
-     * If the ID already exsists then a new predicate is made with the same ID.
-     * @param name name of the predicate
-     * @param isNegated negation status of predicate
-     */
-    public Predicate(String name, boolean isNegated, ArrayList<Term> terms) {
-        Integer lid;
-        this.name = name;
-        this.isNegated = isNegated;
-        this.terms = terms;
-        if((lid = nameIdPairs.get(name)) != null) { //already have a pedicate and id
-            this.id = lid;
-        } else { //new predicate so we should assign id and incr count
-            this.id = predicateCount;
-            //add to hashmap and increment id counter
-            nameIdPairs.put(this.name,this.id);
-            predicateCount++;
-        }
-        visited.add(this);
+    private ArrayList<Term> getTerms() {
+        return terms;
     }
 
     /**
@@ -411,32 +482,6 @@ class Predicate {
     private boolean isNegated() {
         return isNegated;
     }
-
-    /**
-     * Sets parent clause
-     * @param clause c
-     */
-    public void setAsParent(Clause c) {
-        parentClause = c;
-    }
-
-    /**
-     * Gets the String name of Predicate
-     * @return name
-     */
-    private String getName() {
-        return name;
-    }
-
-    /**
-     * Gets term list
-     * @return terms
-     */
-    private ArrayList<Term> getTerms() {
-        return terms;
-    }
-    
-    
 }
 
 
@@ -453,8 +498,33 @@ abstract class Term {
                           //ignores things added by child classes
                           //(weaker equals basically)
 
+    public Term(Term t) {
+        //deep copy constructor
+        this.name = t.getName();
+        this.id = t.getId();
+    }
+
+    public Term(String name) {
+        Integer lid;
+        if((lid = nameIdPairs.get(name)) != null) { //already have a term and id
+            this.id = lid;
+            this.name = name;
+        } else { //new term so we should assign id and incr count
+            this.id = termCount;
+            this.name = name;
+            //add to hashmap and increment id counter
+            nameIdPairs.put(this.name,this.id);
+            termCount++;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "<" + name + ", " + id + ">";
+    }
+
     //should never trigger. You can't have a generic term.
-    Term[] unify(Term otherParam) {
+    public Term[] unify(Term otherParam) {
         throw new Error("This should never be triggered. You can't have a generic term.");
     }
 
@@ -493,29 +563,18 @@ abstract class Term {
         return Objects.equals(this.name, other.name);
     }
 
-    public Term(Term t) {
-        //deep copy constructor
-        this.name = t.getName();
-        this.id = t.getId();
-    }
-
-    public Term(String name) {
-        Integer lid;
-        if((lid = nameIdPairs.get(name)) != null) { //already have a term and id
-            this.id = lid;
-            this.name = name;
-        } else { //new term so we should assign id and incr count
-            this.id = termCount;
-            this.name = name;
-            //add to hashmap and increment id counter
-            nameIdPairs.put(this.name,this.id);
-            termCount++;
-        }
-    }
-
 }
 
 class Const extends Term {
+    
+    
+    /**
+     * Basic constructor. Simply uses parent.
+     * @param name The name of the term.
+     */
+    public Const(String name) {
+        super(name);
+    }
 
     /**
      * Unify a const and a const. 
@@ -546,19 +605,35 @@ class Const extends Term {
     public Term[] unify(Var other) {
         return new Term[]{other,this}; 
     }
-
-    /**
-     * Basic constructor. Simply uses parent.
-     * @param name The name of the term.
-     */
-    public Const(String name) {
-        super(name);
-    }
 }
 
 class Func extends Term {
     private Term parameter;
     
+    /**
+     * Create a new function term
+     * @param name function name
+     * @param parameter function parameter
+     */
+    public Func(String name, Term parameter) {
+        super(name);
+        this.parameter = parameter;
+    }
+
+    @Override
+    public String toString() {
+        return "<" + this.getName() + ", " + this.getId() + ", " + parameter + ">";
+    }
+
+    /**
+     * Create a deepcopy new function term from another function
+     * @param f Function to use
+     */
+    public Func(Func f) {
+        super(f);
+        this.parameter = f.getParameter();
+    }
+
     /**
      * Unify a function and constant
      * @param other constant
@@ -594,41 +669,6 @@ class Func extends Term {
         return null; //if function contains variable
     }
 
-    /**
-     * Create a new function term
-     * @param name function name
-     * @param parameter function parameter
-     */
-    public Func(String name, Term parameter) {
-        super(name);
-        this.parameter = parameter;
-    }
-
-    /**
-     * Create a deepcopy new function term from another function
-     * @param f Function to use
-     */
-    public Func(Func f) {
-        super(f);
-        this.parameter = f.getParameter();
-    }
-
-    /**
-     * Set the parameter for am funtion
-     * @param p The value of the parameter
-     */
-    public void setParameter(Term p) {
-        this.parameter = p;
-    }
-
-    /**
-     * Get the parameter for a function.
-     * @return the parameter
-     */
-    public Term getParameter() {
-        return this.parameter;
-    }
-
     @Override
     public int hashCode() {
         int hash = 7;
@@ -654,9 +694,25 @@ class Func extends Term {
         }
         return Objects.equals(this.parameter, other.parameter);
     }
+
+    /**
+     * Get the parameter for a function.
+     * @return the parameter
+     */
+    public Term getParameter() {
+        return this.parameter;
+    }
 }
 
 class Var extends Term {
+
+    /**
+     * Basic constructor. Simply uses parent.
+     * @param name The name of the term.
+     */
+    public Var(String name) {
+        super(name);
+    }
 
     /**
      * Unify a variable and constant
@@ -688,11 +744,4 @@ class Var extends Term {
         return new Term[]{this,other};
     }
 
-    /**
-     * Basic constructor. Simply uses parent.
-     * @param name The name of the term.
-     */
-    public Var(String name) {
-        super(name);
-    }
 }
