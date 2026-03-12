@@ -70,8 +70,6 @@ public class lab2 {
             constants = new HashSet<>(Arrays.asList(scanner.nextLine().split(" ")));
 
             scanner.nextLine(); //skip functions (we will read as we find them)
-            // scanner.skip(Pattern.compile("Functions: "));
-            // functions = new HashSet<>(Arrays.asList(scanner.nextLine().split(" ")));
 
             scanner.nextLine(); // skip empty "Clauses: "" line
 
@@ -126,7 +124,7 @@ public class lab2 {
 
 
         System.out.println(myKnowledgeBase);
-        
+
          myKnowledgeBase.prove();
          if(myKnowledgeBase.holds()) {
             System.out.println("yes");
@@ -158,6 +156,7 @@ class KB {
         String ret = "";
         for(Clause c : clauses) {
             ret+= "#" + count + " " + c.toString();
+            count++;
         }
         return ret + "\n";
     }

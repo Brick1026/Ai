@@ -8,13 +8,10 @@
             "type": "java",
             "name": "Main",
             "request": "launch",
-            "mainClass": "lab1",
+            "mainClass": "lab2",
             "projectName": "Ai_b46e09d6",
             "args": [
-                "terrain.png",
-                "mpp.txt",
-                "path.txt",
-                "terrain2.png"
+                "C:/Users/srw10/Downloads/testcases/universals+constants/uc06.cnf",
             ]
         }
     ]
