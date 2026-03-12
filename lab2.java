@@ -123,7 +123,7 @@ public class lab2 {
         }
 
 
-        System.out.println(myKnowledgeBase);
+       // System.out.println(myKnowledgeBase);
 
          myKnowledgeBase.prove();
          if(myKnowledgeBase.holds()) {
