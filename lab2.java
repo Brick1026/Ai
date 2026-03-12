@@ -8,51 +8,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-
- // int thisTermListSize = terms.size();
-            // int otherTermListSize = other.getTerms().size();
-            // int loopSize;
-            // int leftover;
-            // boolean thisLarger = thisTermListSize >= otherTermListSize;
-            // if(thisLarger) { //determine smaller predicate
-            //     loopSize = otherTermListSize;
-            //     leftover = thisTermListSize;
-            // } else {
-            //     loopSize = thisTermListSize;
-            //     leftover = otherTermListSize;
-            // }
-
-            // for(int i = 0; i < loopSize; i++) {
-            //     Term thisTerm = this.terms.get(i);
-            //     Term otherTerm = other.getTerms().get(i);
-
-            //     Term result = thisTerm.unify(otherTerm); //unify two terms
-            //     if(result == null) {
-            //         return null; //two terms do not unify. Return null.
-            //     } else {
-            //         newPredicateTermList.add(result);
-            // //     }
-            // // }
-
-            // for(int i = loopSize; i < leftover; i++) {
-            //     if(thisLarger) {
-            //         switch (terms.get(i)) {
-            //             case Func func -> newPredicateTermList.add(new Func(func));
-            //             case Const cnst -> newPredicateTermList.add(new Const(cnst.getName()));
-            //             case Var var -> newPredicateTermList.add(new Var(var.getName()));
-            //             default -> throw new Error("Unexpected generic term.");
-            //         }
-            //     } else {
-            //         switch (other.getTerms().get(i)) {
-            //             case Func func -> newPredicateTermList.add(new Func(func));
-            //             case Const cnst -> newPredicateTermList.add(new Const(cnst.getName()));
-            //             case Var var -> newPredicateTermList.add(new Var(var.getName()));
-            //             default -> throw new Error("Unexpected generic term.");
-            //         }
-            //     }
-            // }
             
-
 public class lab2 {
      public static void main(String[] args) {
 
@@ -80,6 +36,10 @@ public class lab2 {
                     int parameterStartIndex = predicate.lastIndexOf('(');
                     int parameterEndIndex = predicate.lastIndexOf(')');
 
+                    if(parameterStartIndex == -1) {
+                        parameterStartIndex = predicate.length(); //no parameters so the entire predicate is the substring
+                    } 
+
                     boolean isNegated = false;
                     String predicateName;
                     //check if predicate negated
@@ -89,24 +49,26 @@ public class lab2 {
                     } else {
                         predicateName = predicate.substring(0,parameterStartIndex); 
                     }
-                    
-                    //get all predicate terms
-                    String[] terms = predicate.substring(parameterStartIndex+1,parameterEndIndex).split(",");
+
                     ArrayList<Term> predicateTerms = new ArrayList<>();
-                    for(String term : terms) {
-                        //identify term type
-                        if(constants.contains(term)) {
-                            predicateTerms.add(new Const(term));
-                        } else if(variables.contains(term)) {
-                            predicateTerms.add(new Var(term));
-                        } else {
-                            //if function identify function parameter and then adds
-                            String param = term.substring(term.indexOf('(')+1,term.indexOf(')'));
-                            String termName = term.substring(0,term.indexOf(')'));
-                            if(constants.contains(param)) {
-                                predicateTerms.add(new Func(termName,new Const(param)));
+                    if(parameterStartIndex != predicate.length()) {
+                        //get all predicate terms
+                        String[] terms = predicate.substring(parameterStartIndex+1,parameterEndIndex).split(",");
+                        for(String term : terms) {
+                            //identify term type
+                            if(constants.contains(term)) {
+                                predicateTerms.add(new Const(term));
+                            } else if(variables.contains(term)) {
+                                predicateTerms.add(new Var(term));
                             } else {
-                                predicateTerms.add(new Func(termName,new Var(param)));
+                                //if function identify function parameter and then adds
+                                String param = term.substring(term.indexOf('(')+1,term.indexOf(')'));
+                                String termName = term.substring(0,term.indexOf(')'));
+                                if(constants.contains(param)) {
+                                    predicateTerms.add(new Func(termName,new Const(param)));
+                                } else {
+                                    predicateTerms.add(new Func(termName,new Var(param)));
+                                }
                             }
                         }
                     }
@@ -122,15 +84,13 @@ public class lab2 {
             System.exit(-1);
         }
 
-
-       // System.out.println(myKnowledgeBase);
-
-         myKnowledgeBase.prove();
-         if(myKnowledgeBase.holds()) {
+        //System.out.println(myKnowledgeBase);
+        myKnowledgeBase.prove();
+        if(myKnowledgeBase.holds()) {
             System.out.println("yes");
-         } else {
-             System.out.println("no");
-         }
+        } else {
+            System.out.println("no");
+        }
 
      }
 }
@@ -173,12 +133,20 @@ class KB {
      * Perform resolution on the knowledge base
      */
     public void prove() {
-        //TODO: Implement resolution algo
-        //for each clause 
-            //for each clause
-                //resolve (a,b)
-                //if this yields a new clause add it
-                //otherwise discard it
+        proved = true;
+        for(int i = 0; i < clauses.size(); i++) {
+            for(int j = 0; j < clauses.size(); j++) {
+                Clause newClause;
+                if((newClause = clauses.get(i).resolve(clauses.get(j))) != null) {
+                    if(newClause.getPredicates().isEmpty()) { //is this the empty clause
+                        contradiction = true;
+                        return;
+                    }
+                    //System.out.println(newClause);
+                    clauses.add(newClause);
+                }
+            }
+        }
     }
 
     /**
@@ -191,7 +159,7 @@ class KB {
 }
 
 class Clause {
-    static HashSet<Clause> visited = new HashSet<>();
+    private static HashSet<Clause> visited = new HashSet<>();
     private ArrayList<Predicate> predicates;
     private HashMap<Term,Term> substitutions = new HashMap<>();
 
@@ -208,7 +176,7 @@ class Clause {
     }
 
     /**
-     * Creates a clause from a predicate ArrayList
+     * Creates a clause from a predicate ArrayList. maps all predicates to this clause.
      * @param predicates pred Arraylist
      */
     public Clause(ArrayList<Predicate> predicates) {
@@ -220,8 +188,8 @@ class Clause {
     }
 
      /**
+     *  Creates a clause from a clause and maps all predicates in predicate list to this clause.
      * @param Clause clause
-     * Creates a clause from a clause
      */
     public Clause(Clause clause) {
         //deep copy my predicate objects
@@ -233,10 +201,52 @@ class Clause {
         this.predicates = predArrDeepCopy;
     }
 
-
+    /**
+     * Given two clauses resolve as many predicates as possible.
+     * @param other
+     * @return a new clause made from the two clauses, null if it fails or is a duplicate
+     */
     public Clause resolve(Clause other) {
-        //TODO: implement
-        return null;
+        this.clearSubstitutions();
+        other.clearSubstitutions();
+        ArrayList<Predicate> otherPredicates = other.getPredicates();
+        ArrayList<Predicate> newPredicateArraylist = new ArrayList<>();
+        ArrayList<Predicate> leftoversList;
+        ArrayList<Predicate> shortList;
+        int thisLength = predicates.size();
+        int otherLength = otherPredicates.size();
+        boolean thisLonger = thisLength > otherLength;
+        int shorter;
+        int longer;
+
+        if(thisLonger) {
+            shorter = otherLength;
+            longer = thisLength;
+            leftoversList = predicates;
+            shortList = otherPredicates;
+        } else {
+            shorter = thisLength;
+            longer = otherLength;
+            leftoversList = otherPredicates;
+            shortList = predicates;
+        }
+
+        boolean copyOver = false;
+        for(int i = 0; i < shorter; i++) {
+            if(copyOver) { //we already found a resolution. Now just copy everything from both.
+                newPredicateArraylist.add(new Predicate(shortList.get(i),substitutions)); 
+            } else if(predicates.get(i).resolve(otherPredicates.get(i))) { //if two predicates resolve (automatically saves needed subsitutions)
+                copyOver = true;
+            } else {
+                return null; //something doesn't resolve or unify.
+            }
+        }
+
+        for(int i = shorter; i < longer; i++) {
+            newPredicateArraylist.add(new Predicate(leftoversList.get(i),substitutions)); //add remaining predicates with substitutions defined earlier
+        }   
+        
+        return new Clause(newPredicateArraylist);
     }
     
     /**
@@ -260,8 +270,12 @@ class Clause {
      * add a substitution. 
      * @param substitution in the form Term[]{key,value}
      */
-    public Term getSubstituion(Term t) {
+    public Term getSubstitution(Term t) {
         return substitutions.get(t);
+    }
+
+    public void clearSubstitutions() {
+        substitutions.clear();
     }
 
     @Override
@@ -288,6 +302,7 @@ class Clause {
             return false;
         return true;
     }
+
 }
 
 class Predicate {
@@ -313,21 +328,34 @@ class Predicate {
     
      /**
      * Deep clones a predicate and sets parent clause to c
-     * @param p
+     * @param p predicate to copy
+     * @param c parent clause
      */
     public Predicate(Predicate p, Clause c) {
-        this.parentClause = c;
         this.id = p.getId();
         this.name = p.getName();
         this.isNegated = p.isNegated();
         this.terms = new ArrayList<>();
         for(Term t : p.getTerms()) {
-            switch (t) {
-                case Func func -> this.terms.add(new Func(func));
-                case Const cnst -> this.terms.add(new Const(cnst.getName()));
-                case Var var -> this.terms.add(new Var(var.getName()));
-                default -> throw new Error("Unexpected generic term.");
+            this.terms.add(Term.deepCopy(t));
+        }
+    }
+
+     /**
+     * Deep clones a predicate and remaps its terms using a substituion map. Does not set parent clause.
+     * @param p predicate to copy
+     * @param substitutions to apply
+     */
+    public Predicate(Predicate p, HashMap<Term,Term> substitutions) {
+        this.id = p.getId();
+        this.name = p.getName();
+        this.isNegated = p.isNegated();
+        this.terms = new ArrayList<>();
+        for(Term t : p.getTerms()) {
+            if(substitutions.get(t) != null) {
+                t = substitutions.get(t);
             }
+           this.terms.add(Term.deepCopy(t));
         }
     }
 
@@ -342,7 +370,7 @@ class Predicate {
         this.name = name;
         this.isNegated = isNegated;
         this.terms = terms;
-        if((lid = nameIdPairs.get(name)) != null) { //already have a pedicate and id
+        if((lid = nameIdPairs.get(name)) != null) { //already have a predicate and id
             this.id = lid;
         } else { //new predicate so we should assign id and incr count
             this.id = predicateCount;
@@ -367,7 +395,7 @@ class Predicate {
     }
     
     /**
-     * Checks if two predicates can resolve. 
+     * Checks if two predicates can resolve and saves neccesary subsitutions to parent clause.
      * @param other predicate to resolve with
      * @return true or false based on if resolution succeeded
      */
@@ -383,21 +411,26 @@ class Predicate {
                 Term substitution; //empty transfer var
 
                 //uses term or its substituion if avaliable
-                Term thisTerm = this.terms.get(i);
-                if((substitution = parentClause.getSubstituion(thisTerm)) != null) {
-                    thisTerm = substitution;
+                Term thisTerm = Term.deepCopy(this.terms.get(i));
+
+                if((substitution = parentClause.getSubstitution(thisTerm)) != null) {
+                    thisTerm = Term.deepCopy(substitution);
                 }
 
-                Term otherTerm = other.getTerms().get(i);
-                if((substitution = parentClause.getSubstituion(otherTerm)) != null) {
-                    thisTerm = substitution;
+                Term otherTerm = Term.deepCopy(other.getTerms().get(i));
+
+                if((substitution = parentClause.getSubstitution(otherTerm)) != null) {
+                    otherTerm = Term.deepCopy(substitution);
                 }
 
+                
                 Term[] result = thisTerm.unify(otherTerm); //unify two terms
                 if(result == null) {
                     return false; //two terms do not unify. Return false.
                 } else {
+                    //System.out.println("Resolve");
                     parentClause.AddSubstitution(result);
+                    other.getParent().AddSubstitution(result);
                 }
             }
 
@@ -405,6 +438,14 @@ class Predicate {
         }
 
         return false; //not inverses. You can't unify.
+    }
+
+    /**
+     * Retrieves parent clause
+     * @@return clause c
+     */
+    public Clause getParent() {
+        return parentClause;
     }
 
     /**
@@ -475,8 +516,7 @@ class Predicate {
     private int getId() {
         return id;
     }
-    
-    
+
     /**
      * Returns negation status
      * @return isNegated
@@ -500,6 +540,14 @@ abstract class Term {
                           //ignores things added by child classes
                           //(weaker equals basically)
 
+
+
+    //stubs for double dispatch
+    public abstract Term[] unify(Term otherParam);
+    public abstract Term[] unify(Var v);
+    public abstract Term[] unify(Func f);
+    public abstract Term[] unify(Const c);
+
     public Term(Term t) {
         //deep copy constructor
         this.name = t.getName();
@@ -519,15 +567,25 @@ abstract class Term {
             termCount++;
         }
     }
+    /**
+     * Performs a safe deepcopy with respect to the subclass of the original term.
+     * @param thisTerm original term
+     * @return a new deepcopied term
+     */
+    public static Term deepCopy(Term thisTerm) {
+        switch (thisTerm) { //deepcopy Term while retaining subclass.
+            case Func func -> thisTerm = new Func(func);
+            case Const cnst -> thisTerm = new Const(cnst.getName());
+            case Var var -> thisTerm = new Var(var.getName());
+            default -> throw new Error("Unexpected generic term.");
+        }
+        return thisTerm;
+    }
+
 
     @Override
     public String toString() {
         return "<" + name + ", " + id + ">";
-    }
-
-    //should never trigger. You can't have a generic term.
-    public Term[] unify(Term otherParam) {
-        throw new Error("This should never be triggered. You can't have a generic term.");
     }
 
     public String getName() {
@@ -579,10 +637,21 @@ class Const extends Term {
     }
 
     /**
+     * Double dispatch function, maps to speciric unify override
+     * @param other another const
+     * @return Return unification.
+     */
+    @Override
+    public Term[] unify(Term other) {
+        return other.unify(this);
+    }
+
+    /**
      * Unify a const and a const. 
      * @param other another const
      * @return Return a redundant mapping if same (skip) otherwise null cause these never unify.
      */
+    @Override
     public Term[] unify(Const other) {
         if(this.equals(other)) {
             return new Term[]{this,this}; //same constant, map to itself.
@@ -595,6 +664,7 @@ class Const extends Term {
      * @param other a function
      * @return null. These never unify.
      */
+    @Override
     public Term[] unify(Func other) {
         return null;
     }
@@ -604,13 +674,14 @@ class Const extends Term {
      * @param other variable
      * @return a mapping of the variable to the const. These always unify.
      */
+    @Override
     public Term[] unify(Var other) {
         return new Term[]{other,this}; 
     }
 }
 
 class Func extends Term {
-    private Term parameter;
+    private final Term parameter;
     
     /**
      * Create a new function term
@@ -622,18 +693,28 @@ class Func extends Term {
         this.parameter = parameter;
     }
 
-    @Override
-    public String toString() {
-        return "<" + this.getName() + ", " + this.getId() + ", " + parameter + ">";
-    }
-
     /**
      * Create a deepcopy new function term from another function
      * @param f Function to use
      */
     public Func(Func f) {
         super(f);
-        this.parameter = f.getParameter();
+        this.parameter = Term.deepCopy(f.getParameter());
+    }
+    
+    @Override
+    public String toString() {
+        return "<" + this.getName() + ", " + this.getId() + ", " + parameter + ">";
+    }
+
+     /**
+     * Double dispatch function, maps to speciric unify override
+     * @param other another const
+     * @return Return unification.
+     */
+    @Override
+    public Term[] unify(Term other) {
+        return other.unify(this);
     }
 
     /**
@@ -641,6 +722,7 @@ class Func extends Term {
      * @param other constant
      * @return null. This never unifies.
      */
+    @Override
     public Term[] unify(Const other) {
         return null;
     }
@@ -650,13 +732,14 @@ class Func extends Term {
      * @param other another functions
      * @return Term[] representing a mapping if parameters unify and same function otherwise null.
      */
+    @Override
     public Term[] unify(Func other) {
         if(this.getId() != other.getId()) { //check same symbol
             return null; //different functions, will not unify
         }
     
         Term otherParam = other.getParameter();
-        return this.getParameter().unify(otherParam);
+        return otherParam.unify(this.getParameter());
     }
 
     /**
@@ -664,6 +747,7 @@ class Func extends Term {
      * @param other variable
      * @return Term[] representing a mapping if possible otherwise null.
      */
+    @Override
     public Term[] unify(Var other) {
         if(!parameter.equals(other)) { //if function doesn't contain variable
             return new Term[]{other, this};
@@ -717,10 +801,21 @@ class Var extends Term {
     }
 
     /**
+     * Double dispatch function, maps to speciric unify override
+     * @param other another const
+     * @return Return unification.
+     */
+    @Override
+    public Term[] unify(Term other) {
+        return other.unify(this);
+    }
+
+    /**
      * Unify a variable and constant
      * @param other a const
      * @return Always unify. Map variable to const.
      */
+    @Override
     public Term[] unify(Const other) {
         return new Term[]{this,other};
     }
@@ -730,6 +825,7 @@ class Var extends Term {
      * @param other a function
      * @return Return mapping if and only if variable isn't in function.
      */
+    @Override
     public Term[] unify(Func other) {
         if(!other.getParameter().equals(this)) { //if function doesn't contain variable
             return new Term[]{this,other};
@@ -742,6 +838,7 @@ class Var extends Term {
      * @param other another variable
      * @return Always unify so return a mapping
      */
+    @Override
     public Term[] unify(Var other) {
         return new Term[]{this,other};
     }
