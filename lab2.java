@@ -1,7 +1,6 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -196,6 +195,9 @@ class Clause {
      */
     public Clause(ArrayList<Predicate> predicates) {
         this.predicates = predicates;
+        for(Predicate p : this.predicates) { //mark each predicate with this clause as parent
+            p.setAsParent(this);
+        }
     }
 
      /**
@@ -221,12 +223,21 @@ class Clause {
     }
     
     /**
-     * Get active substitions
-     * @return subsitions HashMap
+     * add a substitution. 
+     * @param substitution in the form Term[]{key,value}
      */
-    public HashMap<Term, Term> getSubstitutions() {
-        return substitutions;
+    public void AddSubstitution(Term[] substitution) {
+        substitutions.put(substitution[0],substitution[1]);
     }
+    
+    /**
+     * add a substitution. 
+     * @param substitution in the form Term[]{key,value}
+     */
+    public Term getSubstituion(Term t) {
+        return substitutions.get(t);
+    }
+
 
 
 }
@@ -240,7 +251,7 @@ class Predicate {
     //These two predicates are the same.
     private static HashMap<String,Integer> nameIdPairs = new HashMap<>();
 
-    //Have we seen this a predicate with these parameters before?
+    //Have we seen this a predicate with these parameters before? (may not be needed)
     private static HashSet<Predicate> visited = new HashSet<>();
 
 
@@ -256,11 +267,10 @@ class Predicate {
 
     private Clause parentClause;
  
-
     /**
      * Checks if two predicates can resolve. 
      * @param other predicate to resolve with
-     * @return true or flase based on if resolution succeeded
+     * @return true or false based on if resolution succeeded
      */
     public boolean resolve(Predicate other) {
         if(this.isInverse(other)) { //check predicates are inverses (same name and opposite polarity)
@@ -271,22 +281,31 @@ class Predicate {
             }
 
             for(int i = 0; i < thisTermListSize; i++) {
-                Term thisTerm = this.terms.get(i);
-                Term otherTerm = other.getTerms().get(i);
+                Term substitution; //empty transfer var
 
-                Term result = thisTerm.unify(otherTerm); //unify two terms
+                //uses term or its substituion if avaliable
+                Term thisTerm = this.terms.get(i);
+                if((substitution = parentClause.getSubstituion(thisTerm)) != null) {
+                    thisTerm = substitution;
+                }
+
+                Term otherTerm = other.getTerms().get(i);
+                if((substitution = parentClause.getSubstituion(otherTerm)) != null) {
+                    thisTerm = substitution;
+                }
+
+                Term[] result = thisTerm.unify(otherTerm); //unify two terms
                 if(result == null) {
-                    return false; //two terms do not unify. Return null.
+                    return false; //two terms do not unify. Return false.
                 } else {
-                    parentClause.getSubstitutions().put(thisTerm,result);
-                    parentClause.getSubstitutions().put(otherTerm,result);
+                    parentClause.AddSubstitution(result);
                 }
             }
 
             return true;
         }
 
-        return null; //not inverses. You can't unify.
+        return false; //not inverses. You can't unify.
     }
 
     /**
@@ -360,9 +379,8 @@ class Predicate {
      * @param name name of the predicate
      * @param isNegated negation status of predicate
      */
-    public Predicate(String name, boolean isNegated, ArrayList<Term> terms, Clause c) {
+    public Predicate(String name, boolean isNegated, ArrayList<Term> terms) {
         Integer lid;
-        this.parentClause = c;
         this.name = name;
         this.isNegated = isNegated;
         this.terms = terms;
@@ -395,8 +413,8 @@ class Predicate {
     }
 
     /**
-     * Gets the String name of Predicate
-     * @return name
+     * Sets parent clause
+     * @param clause c
      */
     public void setAsParent(Clause c) {
         parentClause = c;
@@ -410,6 +428,10 @@ class Predicate {
         return name;
     }
 
+    /**
+     * Gets term list
+     * @return terms
+     */
     private ArrayList<Term> getTerms() {
         return terms;
     }
@@ -635,29 +657,41 @@ class Func extends Term {
 }
 
 class Var extends Term {
-    
-    //unification polymorphism
 
     /**
-     * 
-     * @param other
-     * @return
+     * Unify a variable and constant
+     * @param other a const
+     * @return Always unify. Map variable to const.
      */
-    public Term unify(Const other) {
-        return other;
+    public Term[] unify(Const other) {
+        return new Term[]{this,other};
     }
 
-    public Term unify(Func other) {
+    /**
+     * Unify a function and variable
+     * @param other a function
+     * @return Return mapping if and only if variable isn't in function.
+     */
+    public Term[] unify(Func other) {
         if(!other.getParameter().equals(this)) { //if function doesn't contain variable
-            return other;
+            return new Term[]{this,other};
         }
         return null;
     }
 
-    public Term unify(Var other) {
-        return this;
+    /**
+     * Unify two variables
+     * @param other another variable
+     * @return Always unify so return a mapping
+     */
+    public Term[] unify(Var other) {
+        return new Term[]{this,other};
     }
 
+    /**
+     * Basic constructor. Simply uses parent.
+     * @param name The name of the term.
+     */
     public Var(String name) {
         super(name);
     }
