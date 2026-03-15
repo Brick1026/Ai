@@ -99,6 +99,7 @@ class KB {
     private ArrayList<Clause> clauses;
     private boolean contradiction;
     private boolean proved;
+    private HashSet<Clause> visited = new HashSet<>();
 
     /**
      * Representation on a Knowledge Base
@@ -142,8 +143,12 @@ class KB {
                         contradiction = true;
                         return;
                     }
-                    //System.out.println(newClause);
-                    clauses.add(newClause);
+                    //System.out.println("Resolving: " + clauses.get(i) + " & " + clauses.get(j));
+                    if(!visited.contains(newClause)) {
+                        //System.out.println("adding clause: \n" + newClause);
+                        clauses.add(newClause);
+                        visited.add(newClause);
+                    }
                 }
             }
         }
@@ -232,18 +237,30 @@ class Clause {
         }
 
         boolean copyOver = false;
+        int resolutionAt = 0;
         for(int i = 0; i < shorter; i++) {
-            if(copyOver) { //we already found a resolution. Now just copy everything from both.
+            if(copyOver) { //we already found a resolution. Now just copy everything from resolutionAt -> shortlist.
                 newPredicateArraylist.add(new Predicate(shortList.get(i),substitutions)); 
             } else if(predicates.get(i).resolve(otherPredicates.get(i))) { //if two predicates resolve (automatically saves needed subsitutions)
-                copyOver = true;
-            } else {
-                return null; //something doesn't resolve or unify.
-            }
+                copyOver = true; //we found a resolution so copy rest over
+                resolutionAt = i; //save the index of the resolution, we need to copyover everything before as well.
+            } 
         }
 
-        for(int i = shorter; i < longer; i++) {
-            newPredicateArraylist.add(new Predicate(leftoversList.get(i),substitutions)); //add remaining predicates with substitutions defined earlier
+        if(copyOver == false) { //we didn't find anything that resolves
+            return null;
+        }
+
+        for(int i = 0; i < resolutionAt; i++) { //copy everything from start of short list -> resolution
+            newPredicateArraylist.add(new Predicate(shortList.get(i),substitutions));
+        }
+
+        //at this point we have our everything from clause 1 in our new clause (minus the resolved clause)
+
+        for(int i = 0; i < longer; i++) { //add everything from other list except resolved clause
+            if(i != resolutionAt) {
+                 newPredicateArraylist.add(new Predicate(leftoversList.get(i),substitutions)); //add remaining predicates with substitutions defined earlier
+            }
         }   
         
         return new Clause(newPredicateArraylist);
