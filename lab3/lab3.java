@@ -1,9 +1,11 @@
-
 import java.io.File;
 import java.nio.file.attribute.FileAttributeView;
 import java.util.Scanner;
 
+//Decodes input and jumps to functions dtLearn and adaBoost
+
 public class lab3 {
+
     public static void main(String[] args) {
         boolean train = args[0].toLowerCase().equals("train");
         boolean predict = args[0].toLowerCase().equals("predict");
@@ -44,17 +46,22 @@ public class lab3 {
             System.exit(-1);
          }
     }
-
-    public static void train(File examples, File features, String hypothesisOut, String learningType) {
-
-    }
-
-    public static void predict(File examples, File features, File hypothesis) {
-
-    }
-
-    public static void hw3(File testFile) {
-
-    }
     
+   public static void train(File examples, File features, String hypothesisOut, String learningType) {
+      //TODO: if statement for learning type and calls to dtLearn and adaBoost.
+
+      //also handle writeback
+   }
+
+   public static void hw3(File testFile) {
+      //TODO: Implement HW3 Algorithm
+
+      //also handle printing
+   }
+
+   public static void predict(File examples, File features, File hypothesis) {
+      //TODO: Implement prediction function 
+
+      //also handle writeback
+   }
 }
