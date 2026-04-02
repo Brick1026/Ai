@@ -28,19 +28,38 @@ class node implements Serializable {
         int best = getIndexOfBestAttribute();
         this.value = knowledge.get(0).getAttribute(best).getName();
 
+        //split observations based on their responses 
+        ArrayList<observation> trueKnowledge = new ArrayList<>();
+        ArrayList<observation> falseKnowledge = new ArrayList<>();
+        for(observation o : knowledge) {
+            if(o.getAttribute(best).isTrue()) {
+                trueKnowledge.add(o);
+            } else {
+                falseKnowledge.add(o);
+            }
+        }
+        this.falseNeighbor = new node(falseKnowledge);
+        this.trueNeighbor = new node(trueKnowledge);
 
-
-        //split examples into s1 and s2 based on
-
-        return null;
+        return new node[]{this.trueNeighbor,this.falseNeighbor};
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    
+    @Override
+    public String toString() {
+        return "[" + value + "]";
     }
 
-    public String getValue() {
-        return value;
+    /**
+     * Computes entropy given A and B counts
+     * @param int countA
+     * @param int coutnB
+     */
+    private static double computeEntropy(int countA, int countB) {
+        double total = countA + countB;
+        double probA = countA/total;
+        double probB = countB/total;
+        return -1*(probA * Math.log(probA) + probB * Math.log(probB));
     }
 
     /**
@@ -58,11 +77,7 @@ class node implements Serializable {
             }
         }
 
-        double total = countA + countB;
-        double probA = countA/total;
-        double probB = countB/total;
-
-        return -1*(probA * Math.log(probA) + probB * Math.log(probB));
+       return computeEntropy(countA, countB);
 
     }
 
@@ -73,8 +88,8 @@ class node implements Serializable {
      */
     private int getIndexOfBestAttribute() {
         double currentEntropy = getEntropyBeforeSplit();
-        double bestKG = 0;
-        int indexOfBestKG = -1;
+        double bestIG = 0;
+        int indexOfBestAttribute = -1;
 
         for(int c = 0; c < knowledge.get(0).length(); c++) { //walk the columns
             int countATrue = 0;
@@ -96,15 +111,24 @@ class node implements Serializable {
                     }
                 }
             }
+
+            double hTrue = computeEntropy(countATrue, countBTrue);
+            double hFalse = computeEntropy(countAFalse,countBFalse);
+          
+            //compute overall split H
             int totalOverall = countAFalse + countATrue + countBFalse + countBTrue;
-            int totalFalse = countAFalse + countBFalse;
-            int totalTrue = countATrue + countBTrue;
-            //compute the entropy
+            int trueSetSize = countATrue + countBTrue;
+            int falseSetSize = countAFalse + countBFalse;
+            double informationGain = currentEntropy - (hTrue * (trueSetSize/totalOverall) + hFalse * (falseSetSize/totalOverall));
 
-
+            //if this cycle's info gain is greater then current best then update best index and best info
+            if(informationGain > bestIG) {
+                bestIG = informationGain;
+                indexOfBestAttribute = c;
+            }
         }
 
-        return indexOfBestKG;
+        return indexOfBestAttribute;
     }
 
 } 

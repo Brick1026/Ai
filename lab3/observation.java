@@ -21,17 +21,6 @@ public class observation {
     }
 
     /**
-     * Safely deepcopy an observation to decouple references
-     * @parm String label
-     */
-    public observation(observation other) {
-        this.label = other.label;
-        for(attribute a : other.getAttributes()) {
-            this.attributes.add(new attribute(a));
-        }
-    }
-
-    /**
      * Used for examples that need to be labeled
      */
     public observation() {

@@ -141,7 +141,7 @@ public class lab3 {
          System.exit(-1);
       }
 
-      //TODO: Implement prediction function 
+      //TODO: Implement prediction function calls
 
       //also handle writeback
    }

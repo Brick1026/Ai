@@ -19,7 +19,7 @@ public class dtLearn implements Serializable {
      * predict() - Makes a predication based on a decision tree.
      */
     public boolean predict(ArrayList<observation> examples) {
-        //TODO: Implement
+        //TODO: Implement prediction
         return false;
     }
     
