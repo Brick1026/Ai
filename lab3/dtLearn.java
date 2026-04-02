@@ -1,29 +1,31 @@
 
 import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
 
 //Decision tree learning algorithm instance.
 
-public class dtLearn {
+public class dtLearn implements Serializable {
     private decisionTree output;
 
-    public dtLearn(File examples, File features, int maxDepth) {
-        //TODO: Implement
+    public dtLearn(ArrayList<observation> knowledge, int iterations) {
+        output = new decisionTree(knowledge);
+        for(int i = 0; i <= iterations; i++) {
+            output.train();
+        }
     }
 
-    public void storeTree(String dest) {
+    /**
+     * predict() - Makes a predication based on a decision tree.
+     */
+    public boolean predict(ArrayList<observation> examples) {
         //TODO: Implement
-    }
-
-    public static decisionTree loadTree(String src) {
-        //TODO: Implement
-        return null;
+        return false;
     }
     
-    /**
-     * computeEntropy() - calculates the entropy. TODO: HOW??
-     */
-    public static double computeEntropy() {
-        //TODO: Implement
-        return 0;
+    @Override
+    public String toString() {
+        return output.toString();
     }
+
 }

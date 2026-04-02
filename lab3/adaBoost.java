@@ -7,19 +7,15 @@ import java.util.ArrayList;
  * Class used to build an ensemble of adaStumps. 
  */
 public class adaBoost implements Serializable {
-    private ArrayList<adaStump> ensemble = new ArrayList<>();
+    //this is the ensemble (output of adaboost)
+    private ArrayList<adaStump> output = new ArrayList<>();
 
-    public adaBoost(File examples, File features, int boosts) {
+    public adaBoost(ArrayList<observation> knowledge, int boosts, int numberOfStumps) {
         //TODO: Implement
     }
 
-    public void storeEnsemble(String dest) {
-        //TODO: Implement
-    }
-
-    public static adaBoost loadEnsemble(String dest) {
-        //TODO: Implement
-        return null;
+    public void predict(ArrayList<observation> examples) {
+        //TODO implement
     }
 
 }
