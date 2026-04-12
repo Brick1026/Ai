@@ -128,9 +128,24 @@ public class node implements Serializable {
      */
     private static double computeEntropy(double countA, double countB) {
         double total = countA + countB;
+
+        if(total == 0) {
+            return 0;
+        }
+
         double probA = countA/total;
         double probB = countB/total;
-        return -1*(probA * Math.log(probA) + probB * Math.log(probB));
+        double ret = 0;
+
+        if(probA > 0) {
+            ret -= probA * Math.log(probA);
+        } 
+        
+        if(probB > 0) {
+            ret -= probB * Math.log(probB);
+        }
+        
+        return ret;
     }
 
     /**
@@ -181,6 +196,7 @@ public class node implements Serializable {
                     }
                 }
             }
+            //System.out.print("info gain of " + knowledge.get(0).getAttribute(c).getName() + " = ");
 
             double hTrue = computeEntropy(countATrue, countBTrue);
             double hFalse = computeEntropy(countAFalse,countBFalse);
@@ -190,9 +206,7 @@ public class node implements Serializable {
             double trueSetSize = countATrue + countBTrue;
             double falseSetSize = countAFalse + countBFalse;
             double informationGain = currentEntropy - (hTrue * (trueSetSize/totalOverall) + hFalse * (falseSetSize/totalOverall));
-            // System.out.println("info gain: " + informationGain);
-            // System.out.println("best nfo gain: " + bestIG);
-            // System.out.println(c);
+            // System.out.println(informationGain);
             //if this cycle's info gain is greater then current best then update best index and best info
             if(informationGain > bestIG) {
                 bestIG = informationGain;

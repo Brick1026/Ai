@@ -1,4 +1,5 @@
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /*
@@ -6,7 +7,7 @@ Observations can either hold an unlabelled occurence or a labeled occurence.
 In other words, observations can function as both training examples and examples to identify.
 These are used for cummunication between the main IO driven loop and the internal logical functions.
 */
-public class observation {
+public class observation implements Serializable {
     private final ArrayList<attribute> attributes = new ArrayList<>();
     private String label; //should be either A or B
                           //A is treated as English and B as dutch
@@ -14,6 +15,23 @@ public class observation {
 
 
     private double weight;
+
+    /**
+     * Looks through the attributes arraylist
+     * if it finds an attribute with the given name returns it's index.
+     * If an attribute is NOT found return -1.
+     * @param name the name of an attribute in attributes 
+     * @return -1 or the index of the attribute with the given name
+     */
+    public int getIndexOfAttribute(String name) {
+        int idx = -1;
+        for(int i = 0; i < attributes.size(); i++) {
+            if(attributes.get(i).getName().equals(name)) {
+                idx = i;
+            }
+        }
+        return idx;
+    }
 
     public double getWeight() {
         return weight;
@@ -99,16 +117,7 @@ public class observation {
         return attributes.size();
     }
 
-     /**
-     * Returns the attribute array
-     * @return
-     */
-    private ArrayList<attribute> getAttributes() {
-        return attributes;
-    }
-
-
-    public class attribute {
+    public class attribute implements Serializable {
         private final String name;
         private final boolean value;
 
@@ -120,15 +129,6 @@ public class observation {
         public attribute(String name, boolean value) {
             this.name = name;
             this.value = value;
-        }
-
-        /**
-         * Create a new object instance from another 
-         * @param attribute other
-         */
-        private attribute(attribute other) {
-            this.name = other.name;
-            this.value = other.value;
         }
 
         /**

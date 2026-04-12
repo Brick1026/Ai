@@ -6,13 +6,42 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Current File",
+            "name": "Train",
+            "request": "launch",
+            "mainClass": "${file}",
+            "args": [
+                "train",
+                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/nl_en_sentences_2000.txt",
+                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/top100_en_nl_one_per_line.txt",
+                "C:/Users/User/Desktop/AI/Ai/lab3/output_files/tree",
+                "dt" //change this to test ada instead
+            ]
+        },
+
+        {
+            "type": "java",
+            "name": "Predict",
+            "request": "launch",
+            "mainClass": "${file}",
+            "args": [
+                "predict",
+                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/test.dat",
+                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/top100_en_nl_one_per_line.txt",
+                "C:/Users/User/Desktop/AI/Ai/lab3/output_files/tree",
+            ]
+        },
+
+           {
+            "type": "java",
+            "name": "HW3",
             "request": "launch",
             "mainClass": "${file}",
             "args": [
                 "hw3",
-                "C:/Users/User/Desktop/AI/Ai/lab3/dtree-data.dat",
+                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/dtree-data.dat"
             ]
         }
+
+        
     ]
 }

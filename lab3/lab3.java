@@ -7,13 +7,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 
 //Decodes input and jumps to functions dtLearn and adaBoost
 
 public class lab3 {
     //constants to tune algorithms
-    private static final int dtLearnDepth = 2;
+    private static final int dtLearnDepth = 10;
     private static final int numberOfStumps = 100;
 
     public static void main(String[] args) {
@@ -109,10 +111,17 @@ public class lab3 {
 
       //Loop through each example line for each features to flag it and save it as an observation
       for(String[] s : strExamples) { //for each example
-         //build an observation 
-         observation o = new observation(s[0],INIT_WEIGHT);
+         observation o = null;
+
+         if(s[0].equals("en")) {
+            o = new observation("A", INIT_WEIGHT);
+         } else {
+            o = new observation("B", INIT_WEIGHT);
+         }
+
          for(String feat : strFeatures) { //check if it contains each feature
-            o.addAttribute(feat, s[1].contains(feat));
+            String clean = s[1].toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
+            o.addAttribute(feat, Arrays.asList(clean.split("\\s+")).contains(feat));
          }
          knowledge.add(o); // add finished observation
       }
@@ -127,7 +136,7 @@ public class lab3 {
       try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(hypothesisOut))) {
          oos.writeObject(algo); //save the dtlearning session
       } catch(IOException e) {
-         System.err.println("not a valid output file");
+         System.err.println("not a valid output file or obj not serializable");
          System.exit(-1);
       }
    }
@@ -233,11 +242,14 @@ public class lab3 {
          //build an observation 
          observation o = new observation();
          for(String feat : strFeatures) { //check if it contains each feature
-            o.addAttribute(feat, s.contains(feat));
+            String clean = s.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").trim();
+            o.addAttribute(feat, Arrays.asList(clean.split("\\s+")).contains(feat));
          }
          newlyLabeled.add(pred.predict(o)); //will assign a label to the observation inside of predict
       }
       
+      System.out.println("MY TREE:\n" + pred.toString() + "\n");
+
       //loop through and print the determined labels 
       for(observation o : newlyLabeled) {
          System.out.println(o.getLabel());
