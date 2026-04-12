@@ -12,19 +12,50 @@ public class observation {
                           //A is treated as English and B as dutch
                           //this is for simplicity with HW3 compat
 
+
+    private double weight;
+
+    public double getWeight() {
+        return weight;
+    }
+    
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+    
+    /**
+     * Used for training data that has already been labeled and is weighted.
+     * @param String label
+     * @param double weight
+     */
+    public observation(String label, double weight) {
+        //convert to internal representation where en = A and dutch = B
+        if(label.equals("en")) { 
+            this.label = "A";
+        } else if (label.equals("nl")) {
+            this.label = "B";
+        } else {
+            this.label = label;
+        }
+        this.weight = weight;
+    }
+
     /**
      * Used for training data that has already been labeled
-     * @parm String label
+     * @param String label
      */
     public observation(String label) {
         this.label = label;
+        this.weight = 1;
     }
-
+    
     /**
      * Used for examples that need to be labeled
      */
     public observation() {
         this.label = "unknown";
+        this.weight = 1;
     }
     
     /**
@@ -75,6 +106,7 @@ public class observation {
     private ArrayList<attribute> getAttributes() {
         return attributes;
     }
+
 
     public class attribute {
         private final String name;

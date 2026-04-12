@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 //Decision tree learning algorithm instance.
 
-public class dtLearn implements Serializable {
+public class dtLearn implements Serializable, predictable {
     private decisionTree output;
 
     public dtLearn(ArrayList<observation> knowledge, int iterations) {
@@ -13,14 +13,19 @@ public class dtLearn implements Serializable {
         for(int i = 0; i <= iterations; i++) {
             output.train();
         }
+        output.markLeaves();
     }
 
     /**
      * predict() - Makes a predication based on a decision tree.
+     * @param observation example
+     * @return the example observation with an assigned predction
      */
-    public boolean predict(ArrayList<observation> examples) {
-        //TODO: Implement prediction
-        return false;
+    public observation predict(observation example) {
+        
+        
+        example.setLabel("unknown");
+        return example;
     }
     
     @Override

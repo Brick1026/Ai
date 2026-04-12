@@ -4,19 +4,80 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * Node with unique DT learning functionality
+ * Node with unique DT learning functionality. Every node has a unique ID.
  */
 
-class node implements Serializable {
+public class node implements Serializable {
     private node trueNeighbor;
     private node falseNeighbor;
     private final ArrayList<observation> knowledge;
+    private static int nextID = 0;
+    private final int id;
 
     //the attribute which the node uses to split OR a label if this is a leaf.
     private String value;
 
+
     public node(ArrayList<observation> knowledge) {
         this.knowledge = knowledge;
+        this.id = nextID;
+        nextID++;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    
+    public int getId() {
+        return id;
+    }
+
+    public node getTrueNeighbor() {
+        return trueNeighbor;
+    }
+
+    public node getFalseNeighbor() {
+        return falseNeighbor;
+    }
+    
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public boolean isPure() {
+        double countA = 0;
+        double countB = 0;
+        for(observation o : knowledge) {
+            if(o.getLabel().equals("A")){
+                countA++;
+            } else {
+                countB++;
+            }
+        }
+       // System.out.println("COUNTA: " + countA + "COUNTB: " + countB);
+        if(countA == 0 || countB == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public String getMajorityLabel() {
+        double countA = 0;
+        double countB = 0;
+        for(observation o : knowledge) {
+            if(o.getLabel().equals("A")){
+                countA += o.getWeight();
+            } else {
+                countB += o.getWeight();
+            }
+        }
+        if(countA > countB) {
+            return "A";
+        } else {
+            return "B";
+        }
     }
 
     /**
@@ -31,6 +92,7 @@ class node implements Serializable {
         //split observations based on their responses 
         ArrayList<observation> trueKnowledge = new ArrayList<>();
         ArrayList<observation> falseKnowledge = new ArrayList<>();
+        //int misclassifiedCt = 0;
         for(observation o : knowledge) {
             if(o.getAttribute(best).isTrue()) {
                 trueKnowledge.add(o);
@@ -38,6 +100,8 @@ class node implements Serializable {
                 falseKnowledge.add(o);
             }
         }
+
+        //System.out.println(misclassifiedCt);
         this.falseNeighbor = new node(falseKnowledge);
         this.trueNeighbor = new node(trueKnowledge);
 
@@ -47,7 +111,14 @@ class node implements Serializable {
     
     @Override
     public String toString() {
-        return "[" + value + "]";
+        if(getFalseNeighbor() == null) {
+            return "";
+        }
+        String ret = "[" + value  + ", " + id + "]" + " Neighbors: ";
+        ret += "F:" + "[" + getFalseNeighbor().getValue()  + ", " + getFalseNeighbor().getId() + "] " + "T:" + "[" + getTrueNeighbor().getValue() + ", " + getTrueNeighbor().getId() + "]\n";
+        ret += getTrueNeighbor().toString();
+        ret += getFalseNeighbor().toString();
+        return ret;
     }
 
     /**
@@ -55,7 +126,7 @@ class node implements Serializable {
      * @param int countA
      * @param int coutnB
      */
-    private static double computeEntropy(int countA, int countB) {
+    private static double computeEntropy(double countA, double countB) {
         double total = countA + countB;
         double probA = countA/total;
         double probB = countB/total;
@@ -67,16 +138,15 @@ class node implements Serializable {
      * @return double entropy
      */
     private double getEntropyBeforeSplit() {
-        int countA = 0;
-        int countB = 0;
-        for(observation o : knowledge) {
+        double countA = 0;
+        double countB = 0;
+         for(observation o : knowledge) {
             if(o.getLabel().equals("A")){
-                countA++;
+                countA += o.getWeight();
             } else {
-                countB++;
+                countB += o.getWeight();
             }
         }
-
        return computeEntropy(countA, countB);
 
     }
@@ -88,26 +158,26 @@ class node implements Serializable {
      */
     private int getIndexOfBestAttribute() {
         double currentEntropy = getEntropyBeforeSplit();
-        double bestIG = 0;
-        int indexOfBestAttribute = -1;
+        double bestIG = -1;
+        int indexOfBestAttribute = 0;
 
         for(int c = 0; c < knowledge.get(0).length(); c++) { //walk the columns
-            int countATrue = 0;
-            int countBTrue = 0;
-            int countAFalse = 0;
-            int countBFalse = 0;
+            double countATrue = 0;
+            double countBTrue = 0;
+            double countAFalse = 0;
+            double countBFalse = 0;
             for(observation o : knowledge) { //walk the rows of that column
                 if(o.getAttribute(c).isTrue()){
                     if(o.getLabel().equals("A")) {
-                        countATrue++;
+                        countATrue += o.getWeight();
                     } else {
-                        countBTrue++;
+                        countBTrue += o.getWeight();
                     }
                 } else {
                        if(o.getLabel().equals("A")) {
-                        countAFalse++;
+                        countAFalse += o.getWeight();
                     } else {
-                        countBFalse++;
+                        countBFalse += o.getWeight();;
                     }
                 }
             }
@@ -116,11 +186,13 @@ class node implements Serializable {
             double hFalse = computeEntropy(countAFalse,countBFalse);
           
             //compute overall split H
-            int totalOverall = countAFalse + countATrue + countBFalse + countBTrue;
-            int trueSetSize = countATrue + countBTrue;
-            int falseSetSize = countAFalse + countBFalse;
+            double totalOverall = countAFalse + countATrue + countBFalse + countBTrue;
+            double trueSetSize = countATrue + countBTrue;
+            double falseSetSize = countAFalse + countBFalse;
             double informationGain = currentEntropy - (hTrue * (trueSetSize/totalOverall) + hFalse * (falseSetSize/totalOverall));
-
+            // System.out.println("info gain: " + informationGain);
+            // System.out.println("best nfo gain: " + bestIG);
+            // System.out.println(c);
             //if this cycle's info gain is greater then current best then update best index and best info
             if(informationGain > bestIG) {
                 bestIG = informationGain;
