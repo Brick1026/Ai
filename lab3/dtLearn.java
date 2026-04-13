@@ -13,7 +13,7 @@ public class dtLearn implements Serializable, predictable {
      */
     public dtLearn(ArrayList<observation> knowledge, int iterations) {
         output = new decisionTree(knowledge);
-        for(int i = 0; i <= iterations; i++) {
+        for(int i = 0; i < iterations; i++) {
             output.train();
         }
         output.markLeaves();

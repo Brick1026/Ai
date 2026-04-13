@@ -36,6 +36,18 @@ public class observation implements Serializable {
     public double getWeight() {
         return weight;
     }
+
+    public int getLabelAsInt() {
+        if(this.label.equals("A")) {
+            return 1;
+        } else if(this.label.equals("B")) {
+            return -1;
+        } else {
+            System.err.println("Attempt to convert non A or B label to an int");
+            System.exit(-1);
+            return -1;
+        }
+    }
     
 
     public void setWeight(double weight) {
