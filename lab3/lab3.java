@@ -267,8 +267,8 @@ public class lab3 {
       }
 
       //Enable if you want to see accuracy
-      // System.out.println("Number Incorrect: " + incorrect);
-      // System.out.println("Accuracy: " + (TEST_SET_SIZE-incorrect)/TEST_SET_SIZE*100 + "%");
+      System.out.println("Number Incorrect: " + incorrect);
+      System.out.println("Accuracy: " + (TEST_SET_SIZE-incorrect)/TEST_SET_SIZE*100 + "%");
    }
 
 }

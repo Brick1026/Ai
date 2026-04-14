@@ -3,7 +3,8 @@ Program overview:
 My program is a heavily object oriented implementation of HW3 and LAB3. The LAB3 functions follow the expected syntax.
 My trees are saved as serialized "sessions." A session is either an instance of the adBoost.java class or dtLearn.java class.
 A loadable session contains an instance of a decisionTree (dtLearn) or ArrayList of adastumps (adaboost). 
-    -The best tree is inside the output_files subfolder labeled "best" 
+    -The best tree is inside the output_files subfolder labeled "best" which is an adaboost
+        -if you also want my best dt tree it is the file labeled "98"
     -My best features are inside output_files labeled "features.txt"
     -My testing file is inside test_files labeled "train.dat"
     -My training data is inside input_files lagbeled "test.dat"
@@ -96,7 +97,11 @@ ADA accuracy: 98% accuracy on my 100 phrase dataset.
 
 Accuracy after increasing training set to 75 english and dutch:
 
-DT accuracy: 97% on my 100 phrase dataset 
+DT accuracy: 98% on my 100 phrase dataset 
+    -SLIGHT improvement with larger training set
 ADA accuracy: 98% accuracy on my 100 phrase dataset.
+    -No improvement with larger training set
+
+At this point I was more then satisifed with the performance of both my models.
 
 
