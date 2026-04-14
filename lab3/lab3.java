@@ -15,7 +15,7 @@ import java.util.HashSet;
 
 public class lab3 {
     //constants to tune algorithms
-    private static final int dtLearnDepth = 10;
+    private static final int dtLearnDepth = 9;
     private static final int numberOfStumps = 100;
 
     public static void main(String[] args) {
@@ -79,7 +79,7 @@ public class lab3 {
          scanny = new Scanner(examples);
          while(scanny.hasNext()) {
             String line = scanny.nextLine();
-            strExamples.add(line.split("\\s*\\|\\s*"));
+            strExamples.add(line.split("\\s*\\|\\s*",2));
          }
       } catch (FileNotFoundException e) {
          System.err.println("Invalid example file address");
@@ -98,11 +98,11 @@ public class lab3 {
       }
 
       //determine how weights should be initialized
-      final double INIT_WEIGHT;
+      double INIT_WEIGHT;
       if(isDt) {
-         INIT_WEIGHT = 1;
+         INIT_WEIGHT = 1.0;
       } else if(isAda) {
-         INIT_WEIGHT = 1/strExamples.size();
+         INIT_WEIGHT = 1.0/strExamples.size();
       } else {
          INIT_WEIGHT = -1;
          System.err.print("Not a valid learning type");
@@ -248,12 +248,27 @@ public class lab3 {
          newlyLabeled.add(pred.predict(o)); //will assign a label to the observation inside of predict
       }
       
-      System.out.println("MY TREE:\n" + pred.toString() + "\n");
+      //ENABLE IF YOU WANT TO SEE THE TREE
+      //System.out.println("MY TREE:\n" + pred.toString() + "\n");
 
+      final double TEST_SET_SIZE = 100;
+      double incorrect = 0;
+      int number = 0;
       //loop through and print the determined labels 
       for(observation o : newlyLabeled) {
+         if(number < TEST_SET_SIZE/2.0 && o.getLabel().equals("nl")) {
+            incorrect++;
+         } 
+         if(number >= TEST_SET_SIZE/2.0 && o.getLabel().equals("en")) {
+            incorrect++;
+         } 
          System.out.println(o.getLabel());
+         number++;
       }
+
+      //Enable if you want to see accuracy
+      // System.out.println("Number Incorrect: " + incorrect);
+      // System.out.println("Accuracy: " + (TEST_SET_SIZE-incorrect)/TEST_SET_SIZE*100 + "%");
    }
 
 }

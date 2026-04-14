@@ -18,7 +18,7 @@ public class adaBoost implements Serializable, predictable {
             adaStump newStump = new adaStump(knowledge);
             newStump.train();
             newStump.markLeaves();
-            double weightedErr = 0;
+            double weightedErr = 0.0;
             boolean[] isCorrect = new boolean[knowledge.size()];
 
             for(int j = 0; j < knowledge.size(); j++) {
@@ -29,7 +29,6 @@ public class adaBoost implements Serializable, predictable {
                     newStump.branch(curObservation);
                 }
                 
-                weightedErr = 0;
                 //check classification from our tree versus expected
                 if(!newStump.currentLabel().equals(curObservation.getLabel())) {
                     weightedErr += curObservation.getWeight();
@@ -42,23 +41,28 @@ public class adaBoost implements Serializable, predictable {
                 newStump.resetTraversal();
             }
 
+            
             //compute stump weight
             double stumpWeight = .5*Math.log((1-weightedErr)/weightedErr);
+
             newStump.setWeight(stumpWeight);
 
             //update observation weights
-            double sumOfNewWeights = 0;
+            double sumOfNewWeights = 0.0;
             for(int j = 0; j < knowledge.size(); j++) {
                 observation curObservation = knowledge.get(j);
                 double curWeight = curObservation.getWeight();
                 if(isCorrect[j]) {
-                    curObservation.setWeight(curWeight*Math.pow(Math.E,stumpWeight*-1));
-                    sumOfNewWeights+= knowledge.get(j).getWeight();
+                    curObservation.setWeight(curWeight*Math.pow(Math.E,stumpWeight*-1.0));
+                    sumOfNewWeights += knowledge.get(j).getWeight();
                 } else {
                     curObservation.setWeight(curWeight*Math.pow(Math.E,stumpWeight));
-                    sumOfNewWeights+= knowledge.get(j).getWeight();
+                    sumOfNewWeights += knowledge.get(j).getWeight();
                 }
             }
+  
+            //TODO: Make sure weights sum to 1
+             //System.out.println("Sum of new weights: " + sumOfNewWeights);   
 
             // normalize
             for(observation o : knowledge) {
@@ -75,7 +79,29 @@ public class adaBoost implements Serializable, predictable {
      * @return the example observation with an assigned predction
      */
     public observation predict(observation example) {
-        //TODO: Implement
-        return null;
+        int englishCount = 0;
+        int dutchCount = 0;
+        for(adaStump s : output) {
+             //get to a leaf
+            while(s.hasNext()) {
+                s.branch(example);
+            }
+
+            //convert to external representation
+            if(s.currentLabel().equals("A")) {
+                englishCount++;
+            } else {
+                dutchCount++;
+            }
+            //reset traversal
+            s.resetTraversal();
+        }
+
+        if(englishCount > dutchCount) {
+            example.setLabel("en");
+        } else {
+            example.setLabel("nl");
+        }
+        return example;
     }
 }

@@ -11,10 +11,10 @@
             "mainClass": "${file}",
             "args": [
                 "train",
-                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/nl_en_sentences_2000.txt",
-                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/top100_en_nl_one_per_line.txt",
+                "C:/Users/User/Desktop/AI/Ai/lab3/input_files/train.dat",
+                "C:/Users/User/Desktop/AI/Ai/lab3/output_files/features.txt",
                 "C:/Users/User/Desktop/AI/Ai/lab3/output_files/tree",
-                "dt" //change this to test ada instead
+                "ada" //change this to test ada instead
             ]
         },
 
@@ -26,7 +26,7 @@
             "args": [
                 "predict",
                 "C:/Users/User/Desktop/AI/Ai/lab3/test_files/test.dat",
-                "C:/Users/User/Desktop/AI/Ai/lab3/test_files/top100_en_nl_one_per_line.txt",
+                "C:/Users/User/Desktop/AI/Ai/lab3/output_files/features.txt",
                 "C:/Users/User/Desktop/AI/Ai/lab3/output_files/tree",
             ]
         },
