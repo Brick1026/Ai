@@ -83,6 +83,7 @@ public class lab3 {
          }
       } catch (FileNotFoundException e) {
          System.err.println("Invalid example file address");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
@@ -94,6 +95,7 @@ public class lab3 {
          }
       } catch (FileNotFoundException e) {
          System.err.println("Invalid features file address");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
@@ -137,6 +139,7 @@ public class lab3 {
          oos.writeObject(algo); //save the dtlearning session
       } catch(IOException e) {
          System.err.println("not a valid output file or obj not serializable");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
    }
@@ -178,6 +181,7 @@ public class lab3 {
 
       } catch (FileNotFoundException e) {
          System.err.println("Invalid test file address");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
@@ -209,6 +213,7 @@ public class lab3 {
          myObject = ois.readObject();
       } catch(Exception e) {
          System.err.println("There was a problem reading the tree");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
@@ -223,6 +228,7 @@ public class lab3 {
          }
       } catch (FileNotFoundException e) {
          System.err.println("Invalid example file address");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
@@ -234,6 +240,7 @@ public class lab3 {
          }
       } catch (FileNotFoundException e) {
          System.err.println("Invalid features file address");
+         System.err.println(e.getStackTrace());
          System.exit(-1);
       }
 
